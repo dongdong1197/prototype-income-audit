@@ -176,7 +176,7 @@
     </div>
     <div class="nav-group">
       <div class="nav-title">财务管理</div>
-      <div class="nav-item new" id="navAudit" onclick="switchPage('audit')">✅ 入账审核<span class="badge" id="navBadge">3</span></div>
+      <div class="nav-item new" id="navAudit" onclick="switchPage('audit')">✅ 入账审核<span class="badge" id="navBadge">5</span></div>
     </div>
   </div>
 
@@ -213,33 +213,33 @@
       <div class="stat-row">
         <div class="stat-card">
           <div class="label">待审核</div>
-          <div class="value v-warn"><span id="stPending">3</span><span class="unit">笔</span></div>
+          <div class="value v-warn"><span id="stPending">5</span><span class="unit">笔</span></div>
           <div class="sub">代扣已暂停，请及时处理</div>
         </div>
         <div class="stat-card">
           <div class="label">今日已通过入账</div>
-          <div class="value v-success"><span id="stPass">5</span><span class="unit">笔</span></div>
-          <div class="sub">入账金额 <span id="stPassAmt">¥12,860.00</span></div>
+          <div class="value v-success"><span id="stPass">6</span><span class="unit">笔</span></div>
+          <div class="sub">入账金额 <span id="stPassAmt">¥13,460.00</span></div>
         </div>
         <div class="stat-card">
           <div class="label">今日已驳回</div>
-          <div class="value v-danger"><span id="stReject">1</span><span class="unit">笔</span></div>
+          <div class="value v-danger"><span id="stReject">2</span><span class="unit">笔</span></div>
           <div class="sub">待提交人修改后重新提交</div>
         </div>
         <div class="stat-card">
           <div class="label">待审核金额合计</div>
-          <div class="value v-primary" id="stPendingAmt">¥9,450.00</div>
-          <div class="sub">涉及 <span id="stPendingCnt">3</span> 笔账单</div>
+          <div class="value v-primary" id="stPendingAmt">¥12,200.00</div>
+          <div class="sub">涉及 <span id="stPendingCnt">5</span> 笔账单</div>
         </div>
       </div>
 
       <!-- 列表 -->
       <div class="card">
         <div class="tabs">
-          <div class="tab active" data-status="all" onclick="switchTab(this)">全部<span class="cnt">9</span></div>
-          <div class="tab" data-status="pending" onclick="switchTab(this)">待审核<span class="cnt">3</span></div>
-          <div class="tab" data-status="pass" onclick="switchTab(this)">已通过<span class="cnt">5</span></div>
-          <div class="tab" data-status="reject" onclick="switchTab(this)">已驳回<span class="cnt">1</span></div>
+          <div class="tab active" data-status="all" onclick="switchTab(this)">全部<span class="cnt">13</span></div>
+          <div class="tab" data-status="pending" onclick="switchTab(this)">待审核<span class="cnt">5</span></div>
+          <div class="tab" data-status="pass" onclick="switchTab(this)">已通过<span class="cnt">6</span></div>
+          <div class="tab" data-status="reject" onclick="switchTab(this)">已驳回<span class="cnt">2</span></div>
         </div>
         <div class="filter-bar">
           <label>订单号</label><input type="text" id="fOrder" placeholder="请输入订单号" style="width:150px">
@@ -254,13 +254,13 @@
         <table>
           <thead>
             <tr>
-              <th>订单号</th><th>账期</th><th>交易流水号</th><th>交易渠道</th><th>交易金额</th><th>交易日期</th><th>提交人</th><th>提交时间</th><th>代扣状态</th><th>状态</th><th>操作</th>
+              <th>订单号</th><th>账期</th><th>交易流水号</th><th>交易渠道</th><th>交易金额</th><th>交易日期</th><th>提交人</th><th>提交时间</th><th>审核人</th><th>审核完成时间</th><th>代扣状态</th><th>状态</th><th>操作</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
         </table>
         <div class="pager">
-          <span id="pagerTotal">共 9 条</span>
+          <span id="pagerTotal">共 13 条</span>
           <div class="pg">‹</div><div class="pg cur">1</div><div class="pg">›</div>
         </div>
       </div>
@@ -324,10 +324,11 @@
         <div class="card">
           <table>
             <thead>
-              <tr><th>交易流水号</th><th>关联账期</th><th>交易渠道</th><th>交易金额</th><th>提交人</th><th>提交时间</th><th>状态</th></tr>
+              <tr><th>交易流水号</th><th>关联账期</th><th>交易渠道</th><th>交易金额</th><th>提交人</th><th>提交时间</th><th>审核人</th><th>审核完成时间</th><th>状态</th><th>操作</th></tr>
             </thead>
             <tbody id="odFlows"></tbody>
           </table>
+          <div class="bill-note">注：点击「详情」可查看该笔提交的完整内容（账单信息、交易信息、交易截图、审核信息及驳回原因）；被驳回的记录可修改后重新提交。</div>
         </div>
       </div>
 
@@ -464,9 +465,16 @@ const data = [
    bill:{period:"2026-08期(第8期)", due:2100.00, paid:0, remain:2100.00},
    shots:["银行转账截图_1.jpg","银行转账截图_2.jpg"], note:"柜台转账", rejectBy:"财务-王芳", rejectAt:"2026-08-27 09:15",
    rejectReason:"未查询到该笔到账记录，请核实到账后再提交"},
+  /* 孙先生订单演示完整闭环：驳回 → 部分入账通过(600) → 剩余(1500)待审核 */
+  {id:12, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"DG240827088", channel:"对公", amount:600.00, date:"2026-08-27", sub:"客服-王敏", time:"2026-08-27 10:12", status:"pass", deduct:"resumed",
+   bill:{period:"2026-08期(第8期)", due:2100.00, paid:600.00, remain:1500.00},
+   shots:["对公转账回单.jpg"], note:"用户分两笔还款，此为第1笔", passBy:"财务-王芳", passAt:"2026-08-27 11:02"},
+  {id:13, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"WXP240827123", channel:"企微", amount:1500.00, date:"2026-08-27", sub:"客服-王敏", time:"2026-08-27 13:10", status:"pending", deduct:"paused",
+   bill:{period:"2026-08期(第8期)", due:2100.00, paid:600.00, remain:1500.00},
+   shots:["支付截图_1.jpg","支付截图_2.jpg"], note:"剩余1500元当日付清（第2笔）"},
 ];
 
-let curTab="all", curRow=null;
+let curTab="all", curRow=null, drawerView="audit";
 let filter={order:"",flow:"",channel:""};
 
 /* ===== 订单数据（订单列表 / 订单详情，业务视角） ===== */
@@ -476,7 +484,7 @@ const orderDefs=[
   {no:"BJZ20260722003", user:"陈女士 159****3308", goods:"MacBook Air M3 13寸", monthly:1850, periods:10, cur:5, curDue:1850, curPaid:0, paused:true},
   {no:"BJZ20260610012", user:"刘先生 186****7742", goods:"iPhone 14 Plus 128G", monthly:2300, periods:12, cur:9, curDue:4600, curPaid:200, paused:true, overdue:true},
   {no:"BJZ20260715004", user:"赵女士 137****2216", goods:"iPad Pro 11寸 + Apple Pencil", monthly:2500, periods:6, cur:2, curDue:2500, curPaid:1250, paused:true},
-  {no:"BJZ20260408010", user:"孙先生 150****9023", goods:"华为 Mate 60 Pro 512G", monthly:2100, periods:12, cur:8, curDue:2100, curPaid:0, paused:false},
+  {no:"BJZ20260408010", user:"孙先生 150****9023", goods:"华为 Mate 60 Pro 512G", monthly:2100, periods:12, cur:8, curDue:2100, curPaid:600, paused:true},
   {no:"BJZ20260102008", user:"周女士 135****6681", goods:"戴森 V12 吸尘器", monthly:3800, periods:10, cur:10, curDue:3800, curPaid:0, paused:false},
 ];
 
@@ -599,6 +607,10 @@ function renderOrderDetail(no){
   const flows=data.filter(d=>d.order===no).slice().reverse();
   document.getElementById("odFlows").innerHTML=flows.length?flows.map(d=>{
     const s=statusMap[d.status];
+    const auditBy=d.status==="pass"?(d.passBy||"—"):(d.status==="reject"?(d.rejectBy||"—"):"—");
+    const auditAt=d.status==="pass"?(d.passAt||"—"):(d.status==="reject"?(d.rejectAt||"—"):"—");
+    let ops=`<span class="link-btn" onclick="openDrawer(${d.id},'sub')">详情</span>`;
+    if(d.status==="reject") ops+=`<span class="link-btn" onclick="openResubmit(${d.id})">重新提交</span>`;
     return `<tr>
       <td>${d.flow}</td>
       <td>${d.period}</td>
@@ -606,9 +618,12 @@ function renderOrderDetail(no){
       <td style="color:var(--danger);font-weight:600">${fmt(d.amount)}</td>
       <td>${d.sub}</td>
       <td>${d.time}</td>
+      <td>${auditBy}</td>
+      <td>${auditAt}</td>
       <td><span class="tag ${s.c}">${s.t}</span></td>
+      <td style="white-space:nowrap">${ops}</td>
     </tr>`;
-  }).join(""):'<tr><td colspan="7" class="empty-row">该订单暂无线下收款记录</td></tr>';
+  }).join(""):'<tr><td colspan="10" class="empty-row">该订单暂无线下收款记录</td></tr>';
 }
 
 /* ===== 账单联动（审核通过/驳回 → 订单侧账单同步） ===== */
@@ -704,6 +719,8 @@ function render(){
     const deduct=d.deduct==="paused"
       ?'<span class="tag tag-pause">⏸ 代扣已暂停</span>'
       :'<span class="tag tag-channel">▶ 代扣已恢复</span>';
+    const auditBy=d.status==="pass"?(d.passBy||"—"):(d.status==="reject"?(d.rejectBy||"—"):"—");
+    const auditAt=d.status==="pass"?(d.passAt||"—"):(d.status==="reject"?(d.rejectAt||"—"):"—");
     let ops=`<span class="link-btn" onclick="openDrawer(${d.id})">查看</span>`;
     if(d.status==="pending") ops+=`<span class="link-btn success" onclick="openPass(${d.id})">通过</span><span class="link-btn danger" onclick="openReject(${d.id})">驳回</span>`;
     if(d.status==="reject") ops+=`<span class="link-btn" onclick="openResubmit(${d.id})">重新提交</span>`;
@@ -714,11 +731,13 @@ function render(){
       <td><span class="tag tag-channel">${d.channel}</span></td>
       <td style="color:var(--danger);font-weight:600">${fmt(d.amount)}</td>
       <td>${d.date}</td><td>${d.sub}</td><td>${d.time}</td>
+      <td>${auditBy}</td>
+      <td>${auditAt}</td>
       <td>${deduct}</td>
       <td><span class="tag ${s.c}">${s.t}</span></td>
       <td style="white-space:nowrap">${ops}</td>
     </tr>`;
-  }).join(""):'<tr><td colspan="11" class="empty-row">暂无数据，请调整筛选条件</td></tr>';
+  }).join(""):'<tr><td colspan="13" class="empty-row">暂无数据，请调整筛选条件</td></tr>';
   document.getElementById("pagerTotal").textContent=`共 ${list.length} 条`;
 }
 
@@ -749,8 +768,10 @@ function switchTab(el){
 }
 
 /* ===== 抽屉 ===== */
-function openDrawer(id){
+/* view="sub" 表示提交人视角（订单详情打开）：不展示财务审核操作 */
+function openDrawer(id, view){
   const d=data.find(x=>x.id===id); curRow=d;
+  drawerView=(view==="sub")?"sub":"audit";
   const s=statusMap[d.status];
   document.getElementById("drawerTag").innerHTML=`<span class="tag ${s.c}">${s.t}</span>`;
   let banners="";
@@ -758,6 +779,11 @@ function openDrawer(id){
   if(d.status==="reject") banners=`<div class="reject-banner">✕ <div><b>驳回原因</b>（${d.rejectBy} · ${d.rejectAt}）：${d.rejectReason}<br>该账单代扣能力已恢复，按原计划继续代扣。提交人修改后可重新提交。</div></div>`;
   if(d.status==="pass") banners=`<div class="pause-banner" style="background:var(--success-bg);border-color:#A7E3D0;color:#0B7A55">✔ <div><b>已自动入账</b>（${d.passBy} · ${d.passAt}）：金额 ${fmt(d.amount)} 已入至对应账单，代扣能力已恢复${d.bill.remain===0?"（账单已结清，无需代扣）":"（剩余应还继续按原计划代扣）"}。</div></div>`;
   const remain=d.bill.remain;
+  const auditGrid=d.status==="pending"
+    ?`<div class="info-item" style="grid-column:1/-1"><span class="k">审核进度</span><span class="v"><span class="tag tag-pending">待财务审核</span>　提交后等待财务在「入账审核」处理，审核期间账单代扣保持暂停</span></div>`
+    :`<div class="info-item"><span class="k">审核人</span><span class="v">${d.status==="pass"?d.passBy:d.rejectBy}</span></div>
+      <div class="info-item"><span class="k">审核完成时间</span><span class="v">${d.status==="pass"?d.passAt:d.rejectAt}</span></div>
+      <div class="info-item" style="grid-column:1/-1"><span class="k">审核结果</span><span class="v"><span class="tag ${s.c}">${s.t}</span>${d.status==="reject"?`　驳回原因：${d.rejectReason}`:""}</span></div>`;
   document.getElementById("drawerBody").innerHTML=`
     ${banners}
     <div class="sec-title">订单与账单信息</div>
@@ -769,7 +795,7 @@ function openDrawer(id){
       <div class="info-item"><span class="k">剩余应还</span><span class="v ${remain===0?"":"amount-highlight"}">${fmt(remain)}</span></div>
       <div class="info-item"><span class="k">账单状态</span><span class="v">${remain===0?'<span class="tag tag-pass">已结清</span>':'<span class="tag tag-pending">未结清</span>'}</span></div>
     </div>
-    <div class="sec-title">交易信息</div>
+    <div class="sec-title">交易信息（提交内容）</div>
     <div class="info-grid">
       <div class="info-item"><span class="k">交易流水号</span><span class="v">${d.flow}</span></div>
       <div class="info-item"><span class="k">交易渠道</span><span class="v">${d.channel}</span></div>
@@ -779,17 +805,30 @@ function openDrawer(id){
       <div class="info-item"><span class="k">提交时间</span><span class="v">${d.time}</span></div>
       <div class="info-item" style="grid-column:1/-1"><span class="k">交易备注</span><span class="v">${d.note||"—"}</span></div>
     </div>
+    <div class="sec-title">审核信息</div>
+    <div class="info-grid">${auditGrid}</div>
     ${d.amount!==d.bill.remain&&d.status==="pending"?`<div class="reject-banner" style="background:var(--warning-bg);border-color:#F0D9A8;color:var(--warning)">⚠ <div>交易金额与账单剩余应还存在差额（差额 ${fmt(Math.abs(d.bill.remain-d.amount))}），允许部分入账，请财务核实后判断。</div></div>`:""}
     <div class="sec-title">交易截图（${d.shots.length}/3 张）</div>
     <div class="shots">${d.shots.map(s=>`<div class="shot">🖼<span>${s}</span></div>`).join("")}</div>
   `;
   const foot=document.getElementById("drawerFoot");
-  if(d.status==="pending"){
-    foot.innerHTML=`<button class="btn-lg danger" onclick="openReject(${d.id})">✕ 审核驳回</button><button class="btn-lg primary" onclick="openPass(${d.id})">✔ 审核通过并入账</button>`;
-  }else if(d.status==="reject"){
-    foot.innerHTML=`<button class="btn-lg plain" onclick="openResubmit(${d.id})">↻ 重新提交</button>`;
+  if(drawerView==="sub"){
+    /* 提交人视角：只能看 + 驳回后重新提交 */
+    if(d.status==="reject"){
+      foot.innerHTML=`<span style="align-self:center;color:var(--text-light);font-size:12px;margin-right:auto">该笔提交已被驳回，可修改后重新提交</span><button class="btn-lg plain" onclick="openResubmit(${d.id})">↻ 重新提交</button>`;
+    }else if(d.status==="pending"){
+      foot.innerHTML=`<span style="align-self:center;color:var(--text-light);font-size:12px;margin-right:auto">等待财务审核中，审核期间该账单代扣暂停</span><button class="btn-lg" onclick="closeDrawer()">关 闭</button>`;
+    }else{
+      foot.innerHTML=`<span style="align-self:center;color:var(--text-light);font-size:12px;margin-right:auto">已入账完成</span><button class="btn-lg" onclick="closeDrawer()">关 闭</button>`;
+    }
   }else{
-    foot.innerHTML=`<span style="align-self:center;color:var(--text-light);font-size:12px;margin-right:auto">已入账完成，不可再操作</span><button class="btn-lg" onclick="closeDrawer()">关 闭</button>`;
+    if(d.status==="pending"){
+      foot.innerHTML=`<button class="btn-lg danger" onclick="openReject(${d.id})">✕ 审核驳回</button><button class="btn-lg primary" onclick="openPass(${d.id})">✔ 审核通过并入账</button>`;
+    }else if(d.status==="reject"){
+      foot.innerHTML=`<button class="btn-lg plain" onclick="openResubmit(${d.id})">↻ 重新提交</button>`;
+    }else{
+      foot.innerHTML=`<span style="align-self:center;color:var(--text-light);font-size:12px;margin-right:auto">已入账完成，不可再操作</span><button class="btn-lg" onclick="closeDrawer()">关 闭</button>`;
+    }
   }
   document.getElementById("mask").classList.add("show");
   document.getElementById("drawer").classList.add("show");
@@ -837,7 +876,7 @@ function doReject(){
 
 /* ===== 重新提交（提交人视角演示） ===== */
 function openResubmit(id){
-  const d=data.find(x=>x.id===id);
+  const d=data.find(x=>x.id===id); curRow=d;
   document.getElementById("rsReason").textContent=d.rejectReason;
   document.getElementById("resubmitModal").classList.add("show");
 }
@@ -848,6 +887,7 @@ function doResubmit(){
   const ob=findBill(d.order,d.period);
   if(ob){ob.deduct="paused";}
   hideModal("resubmitModal"); closeDrawer(); render(); refreshCounts();
+  if(curPage==="detail") renderOrderDetail(curOrder);
   toast("重新提交成功：状态恢复「待审核」，该账单代扣能力再次暂停");
 }
 
