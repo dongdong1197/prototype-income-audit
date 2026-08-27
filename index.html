@@ -144,6 +144,27 @@
   .legend{display:flex;gap:18px;margin-left:auto;font-size:11px;color:var(--text-light);align-items:center;}
   .legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
 
+  /* ===== 站内消息通知（铃铛下拉） ===== */
+  .notice-wrap{position:relative;}
+  .bell-btn{cursor:pointer;position:relative;font-size:16px;color:var(--text-sub);line-height:1;}
+  .bell-btn:hover{color:var(--primary);}
+  .bell-btn .badge{position:absolute;top:-6px;right:-9px;background:var(--danger);color:#fff;font-size:9px;min-width:14px;height:14px;border-radius:7px;display:flex;align-items:center;justify-content:center;padding:0 3px;font-weight:600;}
+  .notice-panel{position:absolute;top:38px;right:0;width:340px;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.12);display:none;z-index:150;overflow:hidden;}
+  .notice-panel.show{display:block;}
+  .notice-head{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;}
+  .notice-head .clr{margin-left:auto;color:var(--primary);cursor:pointer;font-weight:400;font-size:11px;}
+  .notice-head .clr:hover{text-decoration:underline;}
+  .notice-list{max-height:300px;overflow-y:auto;}
+  .notice-item{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid #F0F2F5;cursor:pointer;align-items:flex-start;}
+  .notice-item:last-child{border-bottom:none;}
+  .notice-item:hover{background:#F8FAFD;}
+  .notice-item .dot{width:6px;height:6px;border-radius:50%;background:var(--danger);margin-top:6px;flex-shrink:0;}
+  .notice-item.read .dot{background:var(--border);}
+  .notice-item .t{font-size:12px;line-height:1.5;}
+  .notice-item.read .t{color:var(--text-sub);}
+  .notice-item .tm{font-size:10px;color:var(--text-light);margin-top:2px;}
+  .notice-empty{padding:26px 0;text-align:center;color:var(--text-light);font-size:12px;}
+
   /* ===== 订单页面 ===== */
   .tag-info{background:#E8F0FE;color:#2F5496;}
   .tag-overdue{background:var(--danger-bg);color:var(--danger);}
@@ -185,7 +206,13 @@
     <div class="topbar">
       <div class="breadcrumb" id="crumb">财务管理 / <b>入账审核</b></div>
       <div class="topbar-right">
-        <span>🔔</span>
+        <div class="notice-wrap">
+          <span class="bell-btn" onclick="toggleNotice(event)">🔔<span class="badge" id="noticeBadge" style="display:none">0</span></span>
+          <div class="notice-panel" id="noticePanel" onclick="event.stopPropagation()">
+            <div class="notice-head">消息通知<span class="clr" onclick="readAllNotices(event)">全部已读</span></div>
+            <div class="notice-list" id="noticeList"></div>
+          </div>
+        </div>
         <div class="avatar" id="userAvatar">财</div>
         <span id="userName">财务-王芳</span>
       </div>
@@ -306,7 +333,7 @@
             <div style="font-weight:600;margin-bottom:4px">业务操作</div>
             <div style="color:var(--text-sub);font-size:12px;line-height:1.7">线下收款登记提交后进入财务「入账审核」队列；审核期间对应账单将<b>暂停代扣</b>，避免用户已线下付款仍被重复扣款；审核通过自动入账，驳回后可修改重新提交。</div>
           </div>
-          <button class="btn-lg plain" onclick="openSubmit()">💵 新建线下收款流水</button>
+          <button class="btn-lg plain" onclick="openSubmit('new')">💵 新建线下收款流水</button>
         </div>
 
         <div class="sec-title">账单列表</div>
@@ -385,31 +412,12 @@
   </div>
 </div>
 
-<!-- 重新提交弹窗（提交人视角演示） -->
-<div class="modal-mask" id="resubmitModal">
-  <div class="modal">
-    <div class="modal-head">↻ 重新提交入账审核</div>
-    <div class="modal-body">
-      <div class="reject-banner" style="margin-top:0">📌 驳回原因：<b id="rsReason"></b></div>
-      <div style="margin-top:6px">提交人可在原记录基础上修改交易信息（流水号、渠道、金额、日期、截图、备注）后重新提交。</div>
-      <ul class="confirm-list" style="margin-top:12px">
-        <li>重新提交后状态恢复为「待审核」；</li>
-        <li>原驳回原因保留可追溯；</li>
-        <li>对应账单<b>再次暂停代扣能力</b>。</li>
-      </ul>
-    </div>
-    <div class="modal-foot">
-      <button class="btn" onclick="hideModal('resubmitModal')">取消</button>
-      <button class="btn-lg plain" onclick="doResubmit()">修改并重新提交</button>
-    </div>
-  </div>
-</div>
-
-<!-- 新建线下收款流水弹窗（订单详情-业务操作） -->
+<!-- 新建线下收款流水弹窗（订单详情-业务操作；重新提交复用同一弹窗，仅标题/驳回提示/数据回显不同） -->
 <div class="modal-mask" id="submitModal">
   <div class="modal" style="width:540px">
-    <div class="modal-head">💵 新建线下收款流水</div>
+    <div class="modal-head" id="subModalTitle">💵 新建线下收款流水</div>
     <div class="modal-body">
+      <div id="subRejectBanner"></div>
       <div class="form-row"><label class="req">关联账期</label><div class="ctrl"><select id="subPeriod" style="width:100%" onchange="onSubPeriodChange()"></select></div></div>
       <div class="form-row"><label class="req">收款金额</label><div class="ctrl"><input type="text" id="subAmount" placeholder="请输入本次收款金额（元）"><div class="form-tip" id="subRemainTip"></div></div></div>
       <div class="form-row"><label class="req">资金流水号</label><div class="ctrl"><input type="text" id="subFlow" placeholder="请输入交易流水号 / 转账单号"><div class="form-tip">同一订单下流水号不可重复，重复提交将被系统硬拦截</div></div></div>
@@ -477,6 +485,55 @@ const data = [
 let curTab="all", curRow=null, drawerView="audit";
 let filter={order:"",flow:"",channel:""};
 
+/* ===== 站内消息通知（最简版：顶栏铃铛下拉） ===== */
+/* to: finance=财务（审核人） / sub=提交人（业务/客服）；与当前页面角色联动 */
+let notices=[
+  {id:1,to:"finance",type:"pending",title:"新提交待审核：订单 BJZ20260408010 · ¥1,500.00（企微），第8期账单代扣已暂停",time:"2026-08-27 13:10",read:false,order:"BJZ20260408010"},
+  {id:2,to:"sub",type:"reject",title:"入账审核被驳回：订单 BJZ20260408010 · ¥2,100.00，原因：未查询到该笔到账记录，请核实到账后再提交",time:"2026-08-27 09:15",read:false,order:"BJZ20260408010"},
+  {id:3,to:"sub",type:"pass",title:"入账审核已通过：订单 BJZ20260408010 · ¥600.00 已自动入账至第8期账单",time:"2026-08-27 11:02",read:true,order:"BJZ20260408010"},
+  {id:4,to:"finance",type:"pending",title:"新提交待审核：订单 BJZ20260815001 · ¥3,200.00（企微），第3期账单代扣已暂停",time:"2026-08-27 09:42",read:true,order:"BJZ20260815001"},
+];
+let noticeSeq=100;
+function notify(to,type,title,order){
+  notices.unshift({id:++noticeSeq,to,type,title,order,time:now(),read:false});
+  renderNotices();
+}
+function curRole(){return curPage==="audit"?"finance":"sub";}
+function toggleNotice(e){
+  e.stopPropagation();
+  const p=document.getElementById("noticePanel");
+  p.classList.toggle("show");
+  if(p.classList.contains("show")) renderNotices();
+}
+function renderNotices(){
+  const role=curRole();
+  const list=notices.filter(n=>n.to===role);
+  document.getElementById("noticeList").innerHTML=list.length?list.map(n=>`
+    <div class="notice-item ${n.read?"read":""}" onclick="readNotice(${n.id})">
+      <span class="dot"></span>
+      <div><div class="t">${n.title}</div><div class="tm">${n.time}</div></div>
+    </div>`).join(""):'<div class="notice-empty">暂无消息</div>';
+  const unread=notices.filter(n=>n.to===role&&!n.read).length;
+  const badge=document.getElementById("noticeBadge");
+  badge.textContent=unread;
+  badge.style.display=unread?"":"none";
+}
+function readNotice(id){
+  const n=notices.find(x=>x.id===id); if(!n) return;
+  n.read=true;
+  document.getElementById("noticePanel").classList.remove("show");
+  renderNotices();
+  /* 点击直达：待审核→入账审核页；通过/驳回→对应订单详情 */
+  if(n.type==="pending"){switchPage("audit");}
+  else{switchPage("detail",n.order);}
+}
+function readAllNotices(e){
+  e.stopPropagation();
+  const role=curRole();
+  notices.forEach(n=>{if(n.to===role) n.read=true;});
+  renderNotices();
+}
+
 /* ===== 订单数据（订单列表 / 订单详情，业务视角） ===== */
 /* cur=当前所在期次；paused=true 表示当前期存在待审核流水（代扣暂停） */
 const orderDefs=[
@@ -524,6 +581,7 @@ function switchPage(p, orderNo){
   document.getElementById("navOrders").classList.toggle("active",p!=="audit");
   const crumb=document.getElementById("crumb");
   const avatar=document.getElementById("userAvatar"), name=document.getElementById("userName");
+  renderNotices();                            /* 角色切换后刷新铃铛消息 */
   if(p==="audit"){
     crumb.innerHTML="财务管理 / <b>入账审核</b>";
     avatar.textContent="财"; name.textContent="财务-王芳";
@@ -610,7 +668,7 @@ function renderOrderDetail(no){
     const auditBy=d.status==="pass"?(d.passBy||"—"):(d.status==="reject"?(d.rejectBy||"—"):"—");
     const auditAt=d.status==="pass"?(d.passAt||"—"):(d.status==="reject"?(d.rejectAt||"—"):"—");
     let ops=`<span class="link-btn" onclick="openDrawer(${d.id},'sub')">详情</span>`;
-    if(d.status==="reject") ops+=`<span class="link-btn" onclick="openResubmit(${d.id})">重新提交</span>`;
+    if(d.status==="reject") ops+=`<span class="link-btn" onclick="openSubmit('resubmit',${d.id})">重新提交</span>`;
     return `<tr>
       <td>${d.flow}</td>
       <td>${d.period}</td>
@@ -638,19 +696,46 @@ function refreshOrderState(orderNo){
   o.status=o.remainTotal===0?"settled":(o.overdue?"overdue":"fulfilling");
 }
 
-/* ===== 新建线下收款流水（录入弹窗） ===== */
-let subShotArr=[];
-function openSubmit(){
-  const o=orders.find(x=>x.no===curOrder); if(!o){toast("请先从订单列表进入订单详情");return;}
+/* ===== 线下收款流水录入弹窗（新建 / 重新提交共用同一表单，区别仅在于驳回提示与数据回显） ===== */
+let subShotArr=[], submitMode="new", resubmitRow=null;
+function openSubmit(mode,id){
+  let d=null;
+  if(mode==="resubmit"){
+    d=data.find(x=>x.id===id); if(!d) return;
+    if(curOrder!==d.order) curOrder=d.order;      /* 从审核页进入时对齐订单上下文 */
+    submitMode="resubmit"; resubmitRow=d;
+    document.getElementById("subModalTitle").textContent="↻ 重新提交入账审核";
+    document.getElementById("subRejectBanner").innerHTML=
+      `<div class="reject-banner" style="margin:0 0 14px">📌 上次驳回（${d.rejectBy} · ${d.rejectAt}）：<b>${d.rejectReason}</b><br>请在此基础上修改交易信息后重新提交，原驳回记录保留可追溯。</div>`;
+  }else{
+    submitMode="new"; resubmitRow=null;
+    document.getElementById("subModalTitle").textContent="💵 新建线下收款流水";
+    document.getElementById("subRejectBanner").innerHTML="";
+  }
+  const o=orders.find(x=>x.no===curOrder);
+  if(!o){toast("请先从订单列表进入订单详情");return;}
   const unpaid=o.bills.filter(b=>b.remain>0);
-  if(!unpaid.length){toast("该订单账单已全部结清，无需登记收款");return;}
+  if(!unpaid.length&&!d){toast("该订单账单已全部结清，无需登记收款");return;}
   document.getElementById("subPeriod").innerHTML=unpaid.map(b=>
     `<option value="${b.label}">${b.label}（剩余应还 ${fmt(b.remain)}）</option>`).join("");
-  document.getElementById("subAmount").value="";
-  document.getElementById("subFlow").value="";
-  document.getElementById("subNote").value="";
-  document.getElementById("subDate").value="2026-08-27";
-  subShotArr=[];
+  if(submitMode==="resubmit"){
+    /* 数据回显：账期 / 金额 / 流水号 / 渠道 / 日期 / 截图 / 备注 */
+    const ps=document.getElementById("subPeriod");
+    if(![...ps.options].some(op=>op.value===d.period)&&unpaid[0]) ps.insertAdjacentHTML("beforeend",`<option value="${d.period}">${d.period}</option>`);
+    ps.value=d.period;
+    document.getElementById("subAmount").value=d.amount;
+    document.getElementById("subFlow").value=d.flow;
+    document.getElementById("subChannel").value=d.channel;
+    document.getElementById("subDate").value=d.date;
+    document.getElementById("subNote").value=d.note||"";
+    subShotArr=[...d.shots];
+  }else{
+    document.getElementById("subAmount").value="";
+    document.getElementById("subFlow").value="";
+    document.getElementById("subNote").value="";
+    document.getElementById("subDate").value="2026-08-27";
+    subShotArr=[];
+  }
   renderSubShots();
   onSubPeriodChange();
   document.getElementById("submitModal").classList.add("show");
@@ -673,32 +758,50 @@ function addShot(){
 }
 function removeShot(i){subShotArr.splice(i,1);renderSubShots();}
 function doSubmit(){
-  const o=orders.find(x=>x.no===curOrder); if(!o) return;
+  const isRe=submitMode==="resubmit";
+  const orderNo=isRe?resubmitRow.order:curOrder;
+  const o=orders.find(x=>x.no===orderNo); if(!o) return;
   const label=document.getElementById("subPeriod").value;
   const bill=o.bills.find(b=>b.label===label);
   const amount=parseFloat(document.getElementById("subAmount").value);
+  const channel=document.getElementById("subChannel").value;
   if(!label){toast("请选择关联账期");return;}
   if(isNaN(amount)||amount<=0){toast("请输入正确的收款金额");document.getElementById("subAmount").focus();return;}
   if(amount>bill.remain){toast(`收款金额不能超过该账单剩余应还 ${fmt(bill.remain)}`);return;}
   const flow=document.getElementById("subFlow").value.trim();
   if(!flow){toast("请输入资金流水号");document.getElementById("subFlow").focus();return;}
-  if(data.some(d=>d.order===curOrder&&d.flow===flow)){
+  if(data.some(x=>x.order===orderNo&&x.flow===flow&&x!==resubmitRow)){
     toast("拦截：该资金流水号在本订单下已提交过，请勿重复提交");return;
   }
   if(!subShotArr.length){toast("请至少上传 1 张交易截图作为到账凭证");return;}
-  data.unshift({
-    id:Math.max(...data.map(d=>d.id))+1, order:curOrder, period:label,
-    flow, channel:document.getElementById("subChannel").value,
-    amount, date:document.getElementById("subDate").value,
-    sub:"客服-李娜", time:now(), status:"pending", deduct:"paused",
-    bill:{period:label, due:bill.due, paid:bill.paid, remain:bill.remain},
-    shots:[...subShotArr], note:document.getElementById("subNote").value.trim()
-  });
+  if(isRe){
+    /* 重新提交：更新原记录，原驳回信息转入历史记录（可追溯） */
+    const d=resubmitRow;
+    d.lastReject={by:d.rejectBy,at:d.rejectAt,reason:d.rejectReason};
+    delete d.rejectBy; delete d.rejectAt; delete d.rejectReason;
+    d.period=label; d.flow=flow; d.channel=channel; d.amount=amount;
+    d.date=document.getElementById("subDate").value;
+    d.shots=[...subShotArr]; d.note=document.getElementById("subNote").value.trim();
+    d.status="pending"; d.deduct="paused"; d.time=now(); d.sub="客服-李娜（重新提交）";
+    d.bill={period:label, due:bill.due, paid:bill.paid, remain:bill.remain};
+    notify("finance","pending",`重新提交待审核：订单 ${orderNo} · ${fmt(amount)}（${channel}），${label}账单代扣已再次暂停`,orderNo);
+  }else{
+    data.unshift({
+      id:Math.max(...data.map(d=>d.id))+1, order:orderNo, period:label,
+      flow, channel, amount, date:document.getElementById("subDate").value,
+      sub:"客服-李娜", time:now(), status:"pending", deduct:"paused",
+      bill:{period:label, due:bill.due, paid:bill.paid, remain:bill.remain},
+      shots:[...subShotArr], note:document.getElementById("subNote").value.trim()
+    });
+    notify("finance","pending",`新提交待审核：订单 ${orderNo} · ${fmt(amount)}（${channel}），${label}账单代扣已暂停`,orderNo);
+  }
   bill.deduct="paused";                      /* 提交后暂停该账单代扣 */
-  refreshOrderState(curOrder);
+  refreshOrderState(orderNo);
   hideModal("submitModal");
-  render(); refreshCounts(); renderOrderDetail(curOrder);
-  toast(`提交成功：已进入「入账审核」待审核队列，${label}代扣已暂停`);
+  render(); refreshCounts(); if(curPage==="detail") renderOrderDetail(curOrder);
+  toast(isRe
+    ?`重新提交成功：状态恢复「待审核」，${label}代扣能力再次暂停`
+    :`提交成功：已进入「入账审核」待审核队列，${label}代扣已暂停`);
 }
 
 const statusMap={pending:{t:"待审核",c:"tag-pending"},pass:{t:"已通过",c:"tag-pass"},reject:{t:"已驳回",c:"tag-reject"}};
@@ -723,7 +826,7 @@ function render(){
     const auditAt=d.status==="pass"?(d.passAt||"—"):(d.status==="reject"?(d.rejectAt||"—"):"—");
     let ops=`<span class="link-btn" onclick="openDrawer(${d.id})">查看</span>`;
     if(d.status==="pending") ops+=`<span class="link-btn success" onclick="openPass(${d.id})">通过</span><span class="link-btn danger" onclick="openReject(${d.id})">驳回</span>`;
-    if(d.status==="reject") ops+=`<span class="link-btn" onclick="openResubmit(${d.id})">重新提交</span>`;
+    if(d.status==="reject") ops+=`<span class="link-btn" onclick="openSubmit('resubmit',${d.id})">重新提交</span>`;
     return `<tr>
       <td><span class="order-no" onclick="openDrawer(${d.id})">${d.order}</span></td>
       <td>${d.period}</td>
@@ -775,7 +878,10 @@ function openDrawer(id, view){
   const s=statusMap[d.status];
   document.getElementById("drawerTag").innerHTML=`<span class="tag ${s.c}">${s.t}</span>`;
   let banners="";
-  if(d.status==="pending") banners=`<div class="pause-banner">⏸ <div><b>该账单代扣能力已暂停</b>：提交成功后系统已暂停本账单自动代扣（含定时代扣任务），待审核期间不再发起代扣，避免用户已线下付款仍被重复代扣。审核通过/驳回后将自动恢复。</div></div>`;
+  if(d.status==="pending"){
+    banners=`<div class="pause-banner">⏸ <div><b>该账单代扣能力已暂停</b>：提交成功后系统已暂停本账单自动代扣（含定时代扣任务），待审核期间不再发起代扣，避免用户已线下付款仍被重复代扣。审核通过/驳回后将自动恢复。</div></div>`;
+    if(d.lastReject) banners+=`<div class="reject-banner">📌 <div><b>重新提交（历史驳回可追溯）</b>（${d.lastReject.by} · ${d.lastReject.at}）：${d.lastReject.reason}<br>提交人已修改交易信息后重新提交，本次为重新送审。</div></div>`;
+  }
   if(d.status==="reject") banners=`<div class="reject-banner">✕ <div><b>驳回原因</b>（${d.rejectBy} · ${d.rejectAt}）：${d.rejectReason}<br>该账单代扣能力已恢复，按原计划继续代扣。提交人修改后可重新提交。</div></div>`;
   if(d.status==="pass") banners=`<div class="pause-banner" style="background:var(--success-bg);border-color:#A7E3D0;color:#0B7A55">✔ <div><b>已自动入账</b>（${d.passBy} · ${d.passAt}）：金额 ${fmt(d.amount)} 已入至对应账单，代扣能力已恢复${d.bill.remain===0?"（账单已结清，无需代扣）":"（剩余应还继续按原计划代扣）"}。</div></div>`;
   const remain=d.bill.remain;
@@ -815,7 +921,7 @@ function openDrawer(id, view){
   if(drawerView==="sub"){
     /* 提交人视角：只能看 + 驳回后重新提交 */
     if(d.status==="reject"){
-      foot.innerHTML=`<span style="align-self:center;color:var(--text-light);font-size:12px;margin-right:auto">该笔提交已被驳回，可修改后重新提交</span><button class="btn-lg plain" onclick="openResubmit(${d.id})">↻ 重新提交</button>`;
+      foot.innerHTML=`<span style="align-self:center;color:var(--text-light);font-size:12px;margin-right:auto">该笔提交已被驳回，可修改后重新提交</span><button class="btn-lg plain" onclick="openSubmit('resubmit',${d.id})">↻ 重新提交</button>`;
     }else if(d.status==="pending"){
       foot.innerHTML=`<span style="align-self:center;color:var(--text-light);font-size:12px;margin-right:auto">等待财务审核中，审核期间该账单代扣暂停</span><button class="btn-lg" onclick="closeDrawer()">关 闭</button>`;
     }else{
@@ -825,7 +931,7 @@ function openDrawer(id, view){
     if(d.status==="pending"){
       foot.innerHTML=`<button class="btn-lg danger" onclick="openReject(${d.id})">✕ 审核驳回</button><button class="btn-lg primary" onclick="openPass(${d.id})">✔ 审核通过并入账</button>`;
     }else if(d.status==="reject"){
-      foot.innerHTML=`<button class="btn-lg plain" onclick="openResubmit(${d.id})">↻ 重新提交</button>`;
+      foot.innerHTML=`<button class="btn-lg plain" onclick="openSubmit('resubmit',${d.id})">↻ 重新提交</button>`;
     }else{
       foot.innerHTML=`<span style="align-self:center;color:var(--text-light);font-size:12px;margin-right:auto">已入账完成，不可再操作</span><button class="btn-lg" onclick="closeDrawer()">关 闭</button>`;
     }
@@ -853,6 +959,7 @@ function doPass(){
   const ob=findBill(d.order,d.period);
   if(ob){ob.paid=d.bill.paid; ob.remain=d.bill.remain; ob.deduct=ob.remain===0?"off":"on"; refreshOrderState(d.order);}
   hideModal("passModal"); closeDrawer(); render(); refreshCounts();
+  notify("sub","pass",`入账审核已通过：订单 ${d.order} · ${fmt(d.amount)} 已自动入账至${d.period}账单，代扣能力已恢复`,d.order);
   toast(`已通过：${fmt(d.amount)} 已自动入账至 ${d.order} 对应账单，代扣能力已恢复`);
 }
 
@@ -871,25 +978,11 @@ function doReject(){
   const ob=findBill(d.order,d.period);
   if(ob){ob.deduct=ob.remain===0?"off":"on";}
   hideModal("rejectModal"); closeDrawer(); render(); refreshCounts();
+  notify("sub","reject",`入账审核被驳回：订单 ${d.order} · ${fmt(d.amount)}，原因：${reason}`,d.order);
   toast("已驳回：该账单代扣能力已恢复，提交人可查看原因后重新提交");
 }
 
-/* ===== 重新提交（提交人视角演示） ===== */
-function openResubmit(id){
-  const d=data.find(x=>x.id===id); curRow=d;
-  document.getElementById("rsReason").textContent=d.rejectReason;
-  document.getElementById("resubmitModal").classList.add("show");
-}
-function doResubmit(){
-  const d=curRow;
-  d.status="pending"; d.deduct="paused";
-  d.time=now(); d.sub="客服-李娜（重新提交）";
-  const ob=findBill(d.order,d.period);
-  if(ob){ob.deduct="paused";}
-  hideModal("resubmitModal"); closeDrawer(); render(); refreshCounts();
-  if(curPage==="detail") renderOrderDetail(curOrder);
-  toast("重新提交成功：状态恢复「待审核」，该账单代扣能力再次暂停");
-}
+/* ===== 重新提交：复用录入弹窗（openSubmit('resubmit', id)） ===== */
 
 /* ===== 通用 ===== */
 function hideModal(id){document.getElementById(id).classList.remove("show");}
@@ -921,7 +1014,7 @@ function now(){
   const d=new Date(),p=n=>String(n).padStart(2,"0");
   return `2026-08-27 ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
-render(); refreshCounts(); switchPage("audit");
+render(); refreshCounts(); renderNotices(); switchPage("audit");
 </script>
 </body>
 </html>
