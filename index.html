@@ -271,8 +271,8 @@
         <div class="filter-bar">
           <label>订单号</label><input type="text" id="fOrder" placeholder="请输入订单号" style="width:150px">
           <label>交易流水号</label><input type="text" id="fFlow" placeholder="请输入流水号" style="width:150px">
-          <label>交易渠道</label>
-          <select id="fChannel" style="width:100px"><option value="">全部</option><option>对公</option><option>企微</option><option>其他</option></select>
+          <label>付款方式</label>
+          <select id="fChannel" style="width:110px"><option value="">全部</option><option>企业微信</option><option>支付宝</option><option>对公转账</option></select>
           <label>提交时间</label><input type="text" id="fDate" placeholder="2026-08-20 ~ 2026-08-27" style="width:180px">
           <button class="btn btn-primary" onclick="doSearch()">查询</button>
           <button class="btn" onclick="doReset()">重置</button>
@@ -281,7 +281,7 @@
         <table>
           <thead>
             <tr>
-              <th>订单号</th><th>账期</th><th>交易流水号</th><th>交易渠道</th><th>交易金额</th><th>交易日期</th><th>提交人</th><th>提交时间</th><th>审核人</th><th>审核完成时间</th><th>代扣状态</th><th>状态</th><th>操作</th>
+              <th>订单号</th><th>账期</th><th>交易流水号</th><th>付款方式</th><th>交易金额</th><th>交易日期</th><th>提交人</th><th>提交时间</th><th>审核人</th><th>审核完成时间</th><th>代扣状态</th><th>状态</th><th>操作</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -352,7 +352,7 @@
         <div class="card">
           <table>
             <thead>
-              <tr><th>交易流水号</th><th>关联账期</th><th>交易渠道</th><th>交易金额</th><th>提交人</th><th>提交时间</th><th>审核人</th><th>审核完成时间</th><th>状态</th><th>操作</th></tr>
+              <tr><th>交易流水号</th><th>关联账期</th><th>付款方式</th><th>交易金额</th><th>提交人</th><th>提交时间</th><th>审核人</th><th>审核完成时间</th><th>状态</th><th>操作</th></tr>
             </thead>
             <tbody id="odFlows"></tbody>
           </table>
@@ -422,7 +422,8 @@
       <div class="form-row"><label class="req">关联账期</label><div class="ctrl"><select id="subPeriod" style="width:100%" onchange="onSubPeriodChange()"></select></div></div>
       <div class="form-row"><label class="req">收款金额</label><div class="ctrl"><input type="text" id="subAmount" placeholder="请输入本次收款金额（元）"><div class="form-tip" id="subRemainTip"></div></div></div>
       <div class="form-row"><label class="req">资金流水号</label><div class="ctrl"><input type="text" id="subFlow" placeholder="请输入交易流水号 / 转账单号"><div class="form-tip">同一订单下流水号不可重复，重复提交将被系统硬拦截</div></div></div>
-      <div class="form-row"><label class="req">交易渠道</label><div class="ctrl"><select id="subChannel" style="width:160px"><option>对公</option><option>企微</option><option>其他</option></select></div></div>
+      <div class="form-row"><label class="req">付款方式</label><div class="ctrl"><select id="subChannel" style="width:160px" onchange="onChannelChange()"><option>企业微信</option><option>支付宝</option><option>对公转账</option></select></div></div>
+      <div class="form-row" id="subBankRow" style="display:none"><label class="req">付款银行</label><div class="ctrl"><input type="text" id="subBank" placeholder="请输入付款银行，如：招商银行"><div class="form-tip">选择「对公转账」时填写，不限制格式，自由填写付款银行名称</div></div></div>
       <div class="form-row"><label class="req">交易日期</label><div class="ctrl"><input type="text" id="subDate" value="2026-08-27" style="width:160px"></div></div>
       <div class="form-row"><label class="req">交易截图</label><div class="ctrl"><div class="upload-area" id="subShots"></div><div class="form-tip">最多 3 张，支持 JPG/PNG，单张不超过 10MB；作为到账凭证供财务审核</div></div></div>
       <div class="form-row"><label>备注</label><div class="ctrl"><textarea id="subNote" style="height:56px" placeholder="选填，如：协商还款、分批还款说明等"></textarea></div></div>
@@ -439,46 +440,46 @@
 <script>
 /* ===== 模拟数据（含PRD最新规则：待审核=代扣暂停，通过/驳回=代扣恢复） ===== */
 const data = [
-  {id:1, order:"BJZ20260815001", period:"2026-08期(第3期)", flow:"WXP240826001", channel:"企微", amount:3200.00, date:"2026-08-26", sub:"客服-李娜", time:"2026-08-27 09:42", status:"pending", deduct:"paused",
+  {id:1, order:"BJZ20260815001", period:"2026-08期(第3期)", flow:"WXP240826001", channel:"企业微信", amount:3200.00, date:"2026-08-26", sub:"客服-李娜", time:"2026-08-27 09:42", status:"pending", deduct:"paused",
    bill:{period:"2026-08期(第3期)", due:3200.00, paid:0, remain:3200.00},
    shots:["支付截图_1.jpg","支付截图_2.jpg"], note:"用户协商先还一期，剩余下月补齐"},
-  {id:2, order:"BJZ20260722003", period:"2026-08期(第5期)", flow:"DG240825887", channel:"对公", amount:1850.00, date:"2026-08-25", sub:"客服-张强", time:"2026-08-27 08:15", status:"pending", deduct:"paused",
+  {id:2, order:"BJZ20260722003", period:"2026-08期(第5期)", flow:"DG240825887", channel:"对公转账", bank:"招商银行", amount:1850.00, date:"2026-08-25", sub:"客服-张强", time:"2026-08-27 08:15", status:"pending", deduct:"paused",
    bill:{period:"2026-08期(第5期)", due:1850.00, paid:0, remain:1850.00},
    shots:["对公转账回单.jpg"], note:"对公转账，已核对回单"},
-  {id:3, order:"BJZ20260610012", period:"2026-08期(第9期)", flow:"QT240827010", channel:"其他", amount:4400.00, date:"2026-08-27", sub:"客服-李娜", time:"2026-08-27 11:03", status:"pending", deduct:"paused",
+  {id:3, order:"BJZ20260610012", period:"2026-08期(第9期)", flow:"ZFB240827010", channel:"支付宝", amount:4400.00, date:"2026-08-27", sub:"客服-李娜", time:"2026-08-27 11:03", status:"pending", deduct:"paused",
    bill:{period:"2026-08期(第9期)", due:4600.00, paid:200.00, remain:4400.00},
-   shots:["银行转账截图_1.jpg","银行转账截图_2.jpg","银行转账截图_3.jpg"], note:"部分还款，先还4400元"},
-  {id:4, order:"BJZ20260518006", period:"2026-08期(第4期)", flow:"WXP240826102", channel:"企微", amount:2800.00, date:"2026-08-26", sub:"客服-张强", time:"2026-08-26 15:20", status:"pass", deduct:"resumed",
+   shots:["支付宝转账截图_1.jpg","支付宝转账截图_2.jpg","支付宝转账截图_3.jpg"], note:"部分还款，先还4400元"},
+  {id:4, order:"BJZ20260518006", period:"2026-08期(第4期)", flow:"WXP240826102", channel:"企业微信", amount:2800.00, date:"2026-08-26", sub:"客服-张强", time:"2026-08-26 15:20", status:"pass", deduct:"resumed",
    bill:{period:"2026-08期(第4期)", due:2800.00, paid:2800.00, remain:0.00},
    shots:["支付截图_1.jpg"], note:"", passBy:"财务-王芳", passAt:"2026-08-26 16:05"},
-  {id:5, order:"BJZ20260412002", period:"2026-08期(第6期)", flow:"DG240825330", channel:"对公", amount:5600.00, date:"2026-08-25", sub:"客服-李娜", time:"2026-08-25 10:11", status:"pass", deduct:"resumed",
+  {id:5, order:"BJZ20260412002", period:"2026-08期(第6期)", flow:"DG240825330", channel:"对公转账", bank:"工商银行", amount:5600.00, date:"2026-08-25", sub:"客服-李娜", time:"2026-08-25 10:11", status:"pass", deduct:"resumed",
    bill:{period:"2026-08期(第6期)", due:5600.00, paid:5600.00, remain:0.00},
    shots:["对公转账回单.jpg","对公转账回单_2.jpg"], note:"", passBy:"财务-王芳", passAt:"2026-08-25 14:30"},
-  {id:6, order:"BJZ20260330009", period:"2026-08期(第3期)", flow:"WXP240824556", channel:"企微", amount:1600.00, date:"2026-08-24", sub:"客服-张强", time:"2026-08-24 09:50", status:"pass", deduct:"resumed",
+  {id:6, order:"BJZ20260330009", period:"2026-08期(第3期)", flow:"WXP240824556", channel:"企业微信", amount:1600.00, date:"2026-08-24", sub:"客服-张强", time:"2026-08-24 09:50", status:"pass", deduct:"resumed",
    bill:{period:"2026-08期(第3期)", due:3200.00, paid:1600.00, remain:1600.00},
    shots:["支付截图_1.jpg"], note:"部分还款", passBy:"财务-王芳", passAt:"2026-08-24 11:20"},
-  {id:7, order:"BJZ20260221005", period:"2026-08期(第7期)", flow:"QT240823201", channel:"其他", amount:2300.00, date:"2026-08-23", sub:"客服-李娜", time:"2026-08-23 16:40", status:"pass", deduct:"resumed",
+  {id:7, order:"BJZ20260221005", period:"2026-08期(第7期)", flow:"ZFB240823201", channel:"支付宝", amount:2300.00, date:"2026-08-23", sub:"客服-李娜", time:"2026-08-23 16:40", status:"pass", deduct:"resumed",
    bill:{period:"2026-08期(第7期)", due:2300.00, paid:2300.00, remain:0.00},
-   shots:["银行转账截图_1.jpg"], note:"", passBy:"财务-王芳", passAt:"2026-08-23 17:15"},
-  {id:8, order:"BJZ20260115011", period:"2026-08期(第2期)", flow:"WXP240822318", channel:"企微", amount:1900.00, date:"2026-08-22", sub:"客服-张强", time:"2026-08-22 14:05", status:"pass", deduct:"resumed",
+   shots:["支付宝转账截图_1.jpg"], note:"", passBy:"财务-王芳", passAt:"2026-08-23 17:15"},
+  {id:8, order:"BJZ20260115011", period:"2026-08期(第2期)", flow:"WXP240822318", channel:"企业微信", amount:1900.00, date:"2026-08-22", sub:"客服-张强", time:"2026-08-22 14:05", status:"pass", deduct:"resumed",
    bill:{period:"2026-08期(第2期)", due:1900.00, paid:1900.00, remain:0.00},
    shots:["支付截图_1.jpg","支付截图_2.jpg"], note:"", passBy:"财务-王芳", passAt:"2026-08-22 15:00"},
-  {id:9, order:"BJZ20260102008", period:"2026-08期(第10期)", flow:"DG240821900", channel:"对公", amount:3800.00, date:"2026-08-21", sub:"客服-李娜", time:"2026-08-21 10:30", status:"reject", deduct:"resumed",
+  {id:9, order:"BJZ20260102008", period:"2026-08期(第10期)", flow:"DG240821900", channel:"对公转账", bank:"建设银行", amount:3800.00, date:"2026-08-21", sub:"客服-李娜", time:"2026-08-21 10:30", status:"reject", deduct:"resumed",
    bill:{period:"2026-08期(第10期)", due:3800.00, paid:0, remain:3800.00},
    shots:["对公转账回单.jpg"], note:"", rejectBy:"财务-王芳", rejectAt:"2026-08-21 13:45",
    rejectReason:"交易截图金额与提交金额不符，请核对后重新提交"},
-  {id:10, order:"BJZ20260715004", period:"2026-08期(第2期)", flow:"WXP240827056", channel:"企微", amount:1250.00, date:"2026-08-27", sub:"客服-王敏", time:"2026-08-27 10:58", status:"pending", deduct:"paused",
+  {id:10, order:"BJZ20260715004", period:"2026-08期(第2期)", flow:"WXP240827056", channel:"企业微信", amount:1250.00, date:"2026-08-27", sub:"客服-王敏", time:"2026-08-27 10:58", status:"pending", deduct:"paused",
    bill:{period:"2026-08期(第2期)", due:2500.00, paid:1250.00, remain:1250.00},
    shots:["支付截图_1.jpg"], note:"用户分两笔还款，此为第1笔"},
-  {id:11, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"QT240826433", channel:"其他", amount:2100.00, date:"2026-08-26", sub:"客服-王敏", time:"2026-08-26 17:26", status:"reject", deduct:"resumed",
+  {id:11, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"ZFB240826433", channel:"支付宝", amount:2100.00, date:"2026-08-26", sub:"客服-王敏", time:"2026-08-26 17:26", status:"reject", deduct:"resumed",
    bill:{period:"2026-08期(第8期)", due:2100.00, paid:0, remain:2100.00},
-   shots:["银行转账截图_1.jpg","银行转账截图_2.jpg"], note:"柜台转账", rejectBy:"财务-王芳", rejectAt:"2026-08-27 09:15",
+   shots:["支付宝转账截图_1.jpg","支付宝转账截图_2.jpg"], note:"柜台转账", rejectBy:"财务-王芳", rejectAt:"2026-08-27 09:15",
    rejectReason:"未查询到该笔到账记录，请核实到账后再提交"},
   /* 孙先生订单演示完整闭环：驳回 → 部分入账通过(600) → 剩余(1500)待审核 */
-  {id:12, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"DG240827088", channel:"对公", amount:600.00, date:"2026-08-27", sub:"客服-王敏", time:"2026-08-27 10:12", status:"pass", deduct:"resumed",
+  {id:12, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"DG240827088", channel:"对公转账", bank:"招商银行", amount:600.00, date:"2026-08-27", sub:"客服-王敏", time:"2026-08-27 10:12", status:"pass", deduct:"resumed",
    bill:{period:"2026-08期(第8期)", due:2100.00, paid:600.00, remain:1500.00},
    shots:["对公转账回单.jpg"], note:"用户分两笔还款，此为第1笔", passBy:"财务-王芳", passAt:"2026-08-27 11:02"},
-  {id:13, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"WXP240827123", channel:"企微", amount:1500.00, date:"2026-08-27", sub:"客服-王敏", time:"2026-08-27 13:10", status:"pending", deduct:"paused",
+  {id:13, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"WXP240827123", channel:"企业微信", amount:1500.00, date:"2026-08-27", sub:"客服-王敏", time:"2026-08-27 13:10", status:"pending", deduct:"paused",
    bill:{period:"2026-08期(第8期)", due:2100.00, paid:600.00, remain:1500.00},
    shots:["支付截图_1.jpg","支付截图_2.jpg"], note:"剩余1500元当日付清（第2笔）"},
 ];
@@ -489,10 +490,10 @@ let filter={order:"",flow:"",channel:""};
 /* ===== 站内消息通知（最简版：顶栏铃铛下拉） ===== */
 /* to: finance=财务（审核人） / sub=提交人（业务/客服）；与当前页面角色联动 */
 let notices=[
-  {id:1,to:"finance",type:"pending",title:"新提交待审核：订单 BJZ20260408010 · ¥1,500.00（企微），第8期账单代扣已暂停",time:"2026-08-27 13:10",read:false,order:"BJZ20260408010"},
+  {id:1,to:"finance",type:"pending",title:"新提交待审核：订单 BJZ20260408010 · ¥1,500.00（企业微信），第8期账单代扣已暂停",time:"2026-08-27 13:10",read:false,order:"BJZ20260408010"},
   {id:2,to:"sub",type:"reject",title:"入账审核被驳回：订单 BJZ20260408010 · ¥2,100.00，原因：未查询到该笔到账记录，请核实到账后再提交",time:"2026-08-27 09:15",read:false,order:"BJZ20260408010"},
   {id:3,to:"sub",type:"pass",title:"入账审核已通过：订单 BJZ20260408010 · ¥600.00 已自动入账至第8期账单",time:"2026-08-27 11:02",read:true,order:"BJZ20260408010"},
-  {id:4,to:"finance",type:"pending",title:"新提交待审核：订单 BJZ20260815001 · ¥3,200.00（企微），第3期账单代扣已暂停",time:"2026-08-27 09:42",read:true,order:"BJZ20260815001"},
+  {id:4,to:"finance",type:"pending",title:"新提交待审核：订单 BJZ20260815001 · ¥3,200.00（企业微信），第3期账单代扣已暂停",time:"2026-08-27 09:42",read:true,order:"BJZ20260815001"},
 ];
 let noticeSeq=100;
 function notify(to,type,title,order){
@@ -727,19 +728,29 @@ function openSubmit(mode,id){
     document.getElementById("subAmount").value=d.amount;
     document.getElementById("subFlow").value=d.flow;
     document.getElementById("subChannel").value=d.channel;
+    document.getElementById("subBank").value=d.bank||"";
     document.getElementById("subDate").value=d.date;
     document.getElementById("subNote").value=d.note||"";
     subShotArr=[...d.shots];
   }else{
     document.getElementById("subAmount").value="";
     document.getElementById("subFlow").value="";
+    document.getElementById("subChannel").value="企业微信";
+    document.getElementById("subBank").value="";
     document.getElementById("subNote").value="";
     document.getElementById("subDate").value="2026-08-27";
     subShotArr=[];
   }
   renderSubShots();
+  onChannelChange();
   onSubPeriodChange();
   document.getElementById("submitModal").classList.add("show");
+}
+function onChannelChange(){
+  /* 付款方式为「对公转账」时显示付款银行输入框，其余方式隐藏并清空 */
+  const isBank=document.getElementById("subChannel").value==="对公转账";
+  document.getElementById("subBankRow").style.display=isBank?"":"none";
+  if(!isBank) document.getElementById("subBank").value="";
 }
 function onSubPeriodChange(){
   const o=orders.find(x=>x.no===curOrder);
@@ -766,9 +777,11 @@ function doSubmit(){
   const bill=o.bills.find(b=>b.label===label);
   const amount=parseFloat(document.getElementById("subAmount").value);
   const channel=document.getElementById("subChannel").value;
+  const bank=document.getElementById("subBank").value.trim();
   if(!label){toast("请选择关联账期");return;}
   if(isNaN(amount)||amount<=0){toast("请输入正确的收款金额");document.getElementById("subAmount").focus();return;}
   if(amount>bill.remain){toast(`收款金额不能超过该账单剩余应还 ${fmt(bill.remain)}`);return;}
+  if(channel==="对公转账"&&!bank){toast("选择对公转账时请填写付款银行");document.getElementById("subBank").focus();return;}
   const flow=document.getElementById("subFlow").value.trim();
   if(!flow){toast("请输入资金流水号");document.getElementById("subFlow").focus();return;}
   if(data.some(x=>x.order===orderNo&&x.flow===flow&&x!==resubmitRow)){
@@ -780,7 +793,7 @@ function doSubmit(){
     const d=resubmitRow;
     d.lastReject={by:d.rejectBy,at:d.rejectAt,reason:d.rejectReason};
     delete d.rejectBy; delete d.rejectAt; delete d.rejectReason;
-    d.period=label; d.flow=flow; d.channel=channel; d.amount=amount;
+    d.period=label; d.flow=flow; d.channel=channel; d.bank=channel==="对公转账"?bank:""; d.amount=amount;
     d.date=document.getElementById("subDate").value;
     d.shots=[...subShotArr]; d.note=document.getElementById("subNote").value.trim();
     d.status="pending"; d.deduct="paused"; d.time=now(); d.sub="客服-李娜（重新提交）";
@@ -789,7 +802,7 @@ function doSubmit(){
   }else{
     data.unshift({
       id:Math.max(...data.map(d=>d.id))+1, order:orderNo, period:label,
-      flow, channel, amount, date:document.getElementById("subDate").value,
+      flow, channel, bank:channel==="对公转账"?bank:"", amount, date:document.getElementById("subDate").value,
       sub:"客服-李娜", time:now(), status:"pending", deduct:"paused",
       bill:{period:label, due:bill.due, paid:bill.paid, remain:bill.remain},
       shots:[...subShotArr], note:document.getElementById("subNote").value.trim()
@@ -905,7 +918,8 @@ function openDrawer(id, view){
     <div class="sec-title">交易信息（提交内容）</div>
     <div class="info-grid">
       <div class="info-item"><span class="k">交易流水号</span><span class="v">${d.flow}</span></div>
-      <div class="info-item"><span class="k">交易渠道</span><span class="v">${d.channel}</span></div>
+      <div class="info-item"><span class="k">付款方式</span><span class="v">${d.channel}</span></div>
+      ${d.bank?`<div class="info-item"><span class="k">付款银行</span><span class="v">${d.bank}</span></div>`:""}
       <div class="info-item"><span class="k">交易金额</span><span class="v amount-highlight">${fmt(d.amount)}</span></div>
       <div class="info-item"><span class="k">交易日期</span><span class="v">${d.date}</span></div>
       <div class="info-item"><span class="k">提交人</span><span class="v">${d.sub}</span></div>
