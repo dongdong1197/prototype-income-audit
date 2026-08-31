@@ -321,7 +321,7 @@
             </thead>
             <tbody id="odFlows"></tbody>
           </table>
-          <div class="bill-note">注：点击「详情」可查看该笔提交的完整内容（账单信息、交易信息、交易截图、审核信息及驳回原因）；被驳回的记录可修改后重新提交。</div>
+          <div class="bill-note">注：点击「详情」可查看该笔提交的完整内容（账单信息、交易信息、交易截图及驳回原因）；被驳回的记录可修改后重新提交。</div>
         </div>
       </div>
 
@@ -646,7 +646,7 @@ function openSubmit(mode,id){
     submitMode="resubmit"; resubmitRow=d;
     document.getElementById("subModalTitle").textContent="↻ 重新提交入账审核";
     document.getElementById("subRejectBanner").innerHTML=
-      `<div class="reject-banner" style="margin:0 0 14px">📌 上次驳回（${d.rejectBy} · ${d.rejectAt}）：<b>${d.rejectReason}</b><br>请在此基础上修改交易信息后重新提交，历史提交版本保留可追溯。</div>`;
+      `<div class="reject-banner" style="margin:0 0 14px">📌 上次驳回：<b>${d.rejectReason}</b><br>请在此基础上修改交易信息后重新提交，历史提交版本保留可追溯。</div>`;
   }else{
     submitMode="new"; resubmitRow=null;
     document.getElementById("subModalTitle").textContent="💵 新建线下收款流水";
@@ -888,16 +888,11 @@ function openDrawer(id, view){
   if(d.status==="pending"){
     banners=`<div class="pause-banner">⏸ <div><b>选中账单代扣能力已暂停</b>：提交成功后系统已暂停全部选中账期自动代扣（含定时代扣任务、失败重试及催收人工触发扣款），待审核期间不再发起代扣，避免用户已线下付款仍被重复代扣。审核通过/驳回/撤回后将自动恢复。</div></div>`;
     const lastV=d.versions&&d.versions.length?d.versions[d.versions.length-1]:null;
-    if(lastV&&lastV.rejectReason) banners+=`<div class="reject-banner">📌 <div><b>重新提交（历史版本可追溯）</b>（${lastV.rejectBy} · ${lastV.rejectAt}）：${lastV.rejectReason}<br>提交人已修改交易信息后重新提交，本次为重新送审。</div></div>`;
+    if(lastV&&lastV.rejectReason) banners+=`<div class="reject-banner">📌 <div><b>重新提交（历史版本可追溯）</b>：${lastV.rejectReason}<br>提交人已修改交易信息后重新提交，本次为重新送审。</div></div>`;
   }
-  if(d.status==="reject") banners=`<div class="reject-banner">✕ <div><b>驳回原因</b>（${d.rejectBy} · ${d.rejectAt}）：${d.rejectReason}<br>对应账单代扣能力已恢复，按原计划继续代扣。提交人修改后可重新提交。</div></div>`;
-  if(d.status==="pass") banners=`<div class="pause-banner" style="background:var(--success-bg);border-color:#A7E3D0;color:#0B7A55">✔ <div><b>已自动入账</b>（${d.passBy} · ${d.passAt}）：金额 ${fmt(d.amount)} 已入至对应账单，代扣能力已恢复${remTotal===0?"（账单已结清，无需代扣）":"（剩余应还继续按原计划代扣）"}。</div></div>`;
-  if(d.status==="withdraw") banners=`<div class="reject-banner" style="background:#F3F4F6;border-color:#D8DCE2;color:var(--text-sub)">↩ <div><b>已撤回</b>（${d.withdrawBy} · ${d.withdrawAt}）：提交人主动撤回本次提交，对应账单代扣能力已恢复；如需入账请重新发起提交。</div></div>`;
-  const auditGrid=d.status==="pending"
-    ?`<div class="info-item" style="grid-column:1/-1"><span class="k">审核进度</span><span class="v"><span class="tag tag-pending">待财务审核</span>　提交后等待财务在「入账审核」处理，审核期间选中账单代扣保持暂停</span></div>`
-    :`<div class="info-item"><span class="k">审核人</span><span class="v">${d.status==="pass"?d.passBy:(d.status==="reject"?d.rejectBy:(d.withdrawBy||"—"))}</span></div>
-      <div class="info-item"><span class="k">审核完成时间</span><span class="v">${d.status==="pass"?d.passAt:(d.status==="reject"?d.rejectAt:(d.withdrawAt||"—"))}</span></div>
-      <div class="info-item" style="grid-column:1/-1"><span class="k">审核结果</span><span class="v"><span class="tag ${s.c}">${s.t}</span>${d.status==="reject"?`　驳回原因：${d.rejectReason}`:(d.status==="withdraw"?"　提交人撤回，如需入账请重新发起提交":"")}</span></div>`;
+  if(d.status==="reject") banners=`<div class="reject-banner">✕ <div><b>驳回原因</b>：${d.rejectReason}<br>对应账单代扣能力已恢复，按原计划继续代扣。提交人修改后可重新提交。</div></div>`;
+  if(d.status==="pass") banners=`<div class="pause-banner" style="background:var(--success-bg);border-color:#A7E3D0;color:#0B7A55">✔ <div><b>已自动入账</b>：金额 ${fmt((d.amount||0)-(d.discount||0))}（收款 ${fmt(d.amount)}${d.discount?` − 优惠 ${fmt(d.discount)}`:""}）已入至对应账单，代扣能力已恢复${remTotal===0?"（账单已结清，无需代扣）":"（剩余应还继续按原计划代扣）"}。</div></div>`;
+  if(d.status==="withdraw") banners=`<div class="reject-banner" style="background:#F3F4F6;border-color:#D8DCE2;color:var(--text-sub)">↩ <div><b>已撤回</b>：提交人主动撤回本次提交，对应账单代扣能力已恢复；如需入账请重新发起提交。</div></div>`;
   const verHtml=(d.versions&&d.versions.length)?`<div class="sec-title">提交历史版本（${d.versions.length}）</div>
     ${d.versions.slice().reverse().map((v,i)=>`
       <div class="pause-banner" style="margin:8px 0;padding:10px 12px">
@@ -923,15 +918,13 @@ function openDrawer(id, view){
       <div class="info-item"><span class="k">付款方式</span><span class="v">${d.channel}</span></div>
       ${d.bank?`<div class="info-item"><span class="k">付款银行</span><span class="v">${d.bank}</span></div>`:""}
       <div class="info-item"><span class="k">交易金额</span><span class="v amount-highlight">${fmt(d.amount)}</span></div>
-      ${d.discount?`<div class="info-item"><span class="k">优惠金额</span><span class="v" style="color:var(--success);font-weight:600">−${fmt(d.discount)}</span></div>
-      <div class="info-item"><span class="k">实际入账</span><span class="v">${fmt(d.amount-d.discount)}（收款 − 优惠）</span></div>`:""}
+      <div class="info-item"><span class="k">优惠金额</span><span class="v">${d.discount?`<span style="color:var(--success);font-weight:600">−${fmt(d.discount)}</span>`:"—"}</span></div>
+      <div class="info-item"><span class="k">实际入账</span><span class="v">${fmt((d.amount||0)-(d.discount||0))}</span></div>
       <div class="info-item"><span class="k">交易日期</span><span class="v">${d.date}</span></div>
       <div class="info-item"><span class="k">提交人</span><span class="v">${d.sub}</span></div>
       <div class="info-item"><span class="k">提交时间</span><span class="v">${d.time}</span></div>
       <div class="info-item" style="grid-column:1/-1"><span class="k">交易备注</span><span class="v">${d.note||"—"}</span></div>
     </div>
-    <div class="sec-title">审核信息</div>
-    <div class="info-grid">${auditGrid}</div>
     ${d.amount!==remTotal&&d.status==="pending"?`<div class="reject-banner" style="background:var(--warning-bg);border-color:#F0D9A8;color:var(--warning)">⚠ <div>交易金额与所选账期剩余应还合计存在差额（差额 ${fmt(Math.abs(remTotal-d.amount))}），允许部分入账，请财务核实后判断。</div></div>`:""}
     ${verHtml}
     <div class="sec-title">交易截图（${d.shots.length}/3 张）</div>
