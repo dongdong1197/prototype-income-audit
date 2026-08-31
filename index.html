@@ -81,6 +81,8 @@
   .tag-pause{background:#EEF2FF;color:#4C51BF;}
   .tag-channel{background:#F3F4F6;color:var(--text-sub);}
   .tag-withdraw{background:#F3F4F6;color:var(--text-light);}
+  /* 驳回原因列表展示：固定宽度截断，鼠标悬停展示全部 */
+  .reject-reason{display:inline-block;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom;color:var(--danger);cursor:help;}
   /* 账期多选列表 */
   .period-list{display:flex;flex-direction:column;gap:6px;max-height:170px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:8px;background:#fff;}
   .period-item{display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 8px;border-radius:6px;cursor:pointer;}
@@ -317,7 +319,7 @@
         <div class="card">
           <table>
             <thead>
-              <tr><th>交易流水号</th><th>关联账期</th><th>付款方式</th><th>交易金额</th><th>提交人</th><th>提交时间</th><th>审核人</th><th>审核完成时间</th><th>状态</th><th>操作</th></tr>
+              <tr><th>交易流水号</th><th>关联账期</th><th>付款方式</th><th>交易金额</th><th>提交人</th><th>提交时间</th><th>审核人</th><th>审核完成时间</th><th>驳回原因</th><th>状态</th><th>操作</th></tr>
             </thead>
             <tbody id="odFlows"></tbody>
           </table>
@@ -607,10 +609,11 @@ function renderOrderDetail(no){
       <td>${d.time}</td>
       <td>${auditBy}</td>
       <td>${auditAt}</td>
+      <td>${d.status==="reject"&&d.rejectReason?`<span class="reject-reason" title="${d.rejectReason}">${d.rejectReason}</span>`:"—"}</td>
       <td><span class="tag ${s.c}">${s.t}</span></td>
       <td style="white-space:nowrap">${ops}</td>
     </tr>`;
-  }).join(""):'<tr><td colspan="10" class="empty-row">该订单暂无线下收款记录</td></tr>';
+  }).join(""):'<tr><td colspan="11" class="empty-row">该订单暂无线下收款记录</td></tr>';
 }
 
 /* ===== 账单联动（审核通过/驳回 → 订单侧账单同步） ===== */
