@@ -394,9 +394,9 @@
       确认通过后，系统将自动执行以下动作：
       <ul class="confirm-list">
         <li>入账至订单 <b id="passOrder"></b> 对应账期的账单下；</li>
-        <li>账单「已还金额」累加，剩余应还实时更新；</li>
-        <li>账单全部结清 → 订单状态自动变更为「已结清」；</li>
-        <li>同步<b>恢复该账单代扣能力</b>（已结清无需代扣，部分入账继续代扣剩余）。</li>
+        <li>账单「已还金额」累加，剩余应还实时更新（仅关联账单状态，订单状态沿用现有处理逻辑）；</li>
+        <li>金额校验：交易金额超过所选账单剩余应还时<b>不允许通过</b>，提示「金额超出，请确认还款账期」；</li>
+        <li>按<b>账单维度</b>恢复对应账期代扣能力（已结清无需代扣，部分入账继续代扣剩余，不影响订单下其他账期）。</li>
       </ul>
       <div style="margin-top:10px;color:var(--text-light)">入账与状态更新保持事务一致，通过后不可撤销。</div>
     </div>
@@ -722,10 +722,10 @@ function findBill(orderNo, periodLabel){
   return o?o.bills.find(b=>b.label===periodLabel):null;
 }
 function refreshOrderState(orderNo){
+  /* 只关联账单状态：聚合订单剩余/已还展示数据；订单状态沿用现有系统处理逻辑，本次不模拟变更 */
   const o=orders.find(x=>x.no===orderNo); if(!o) return;
   o.remainTotal=o.bills.reduce((s,b)=>s+b.remain,0);
   o.paidPeriods=o.bills.filter(b=>b.remain===0).length;
-  o.status=o.remainTotal===0?"settled":(o.overdue?"overdue":"fulfilling");
 }
 
 /* ===== 线下收款流水录入弹窗（新建 / 重新提交共用同一表单，区别仅在于驳回提示与数据回显） ===== */
@@ -1084,10 +1084,16 @@ function openPass(id){
 }
 function doPass(){
   const d=curRow;
+  /* 审核通过金额校验（普通租金账单）：交易金额超过所选账单剩余应还时不允许通过 */
+  const pl=periodsOf(d);
+  const remTotal=pl.reduce((t,p)=>{const b=findBill(d.order,p);return t+(b?b.remain:0);},0);
+  if(d.billType==="普通租金"&&d.amount>remTotal){
+    toast(`金额超出，请确认还款账期：交易金额 ${fmt(d.amount)} 超过所选账单剩余应还 ${fmt(remTotal)}，不允许通过`);return;
+  }
   d.status="pass"; d.deduct="resumed";
   /* 多账期顺序冲抵：按账期顺序依次冲抵，剩余滚动到下一账期（首版不新增分摊规则） */
   let remaining=d.amount;
-  (d.periods&&d.periods.length?d.periods:[d.period]).forEach(p=>{
+  pl.forEach(p=>{
     const ob=findBill(d.order,p);
     if(!ob||remaining<=0) return;
     const hit=Math.min(ob.remain,remaining);
@@ -1099,7 +1105,7 @@ function doPass(){
   refreshOrderState(d.order);
   hideModal("passModal"); closeDrawer(); render(); refreshCounts();
   if(curPage==="detail") renderOrderDetail(curOrder);
-  notify("sub","pass",`入账审核已通过：订单 ${d.order} · ${fmt(d.amount)} 已自动入账至${periodsOf(d).join("、")}账单，代扣能力已恢复`,d.order);
+  notify("sub","pass",`入账审核已通过：订单 ${d.order} · ${fmt(d.amount)} 已自动入账至${pl.join("、")}账单，代扣能力已恢复`,d.order);
   toast(`已通过：${fmt(d.amount)} 已自动入账至 ${d.order} 对应账单，代扣能力已恢复`);
 }
 
