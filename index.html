@@ -246,7 +246,7 @@
         <table>
           <thead>
             <tr>
-              <th>审核单号</th><th>订单号</th><th>用户姓名</th><th>账期</th><th>交易流水号</th><th>付款方式</th><th>交易金额</th><th>交易日期</th><th>提交人</th><th>提交时间</th><th>审核人</th><th>审核完成时间</th><th>状态</th><th>操作</th>
+              <th>订单号</th><th>用户姓名</th><th>账期</th><th>交易流水号</th><th>付款方式</th><th>交易金额</th><th>交易日期</th><th>提交人</th><th>提交时间</th><th>审核人</th><th>审核完成时间</th><th>状态</th><th>操作</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -387,6 +387,7 @@
       <div class="form-row"><label class="req">关联订单</label><div class="ctrl"><input type="text" id="subOrder" readonly style="background:#F3F4F6"><div class="form-tip">仅还款中/逾期订单可提交，已完结、司法处置中不可提交；本次仅支持租金账单入账审核</div></div></div>
       <div class="form-row"><label class="req">关联账期</label><div class="ctrl"><div id="subPeriodList" class="period-list"></div><div class="form-tip" id="subRemainTip"></div></div></div>
       <div class="form-row"><label class="req">收款金额</label><div class="ctrl"><input type="text" id="subAmount" placeholder="请输入本次收款金额（元）"></div></div>
+      <div class="form-row"><label>优惠金额</label><div class="ctrl"><input type="text" id="subDiscount" placeholder="选填，协商减免金额（元）"><div class="form-tip">如有协商减免填写，无减免留空；实际入账金额 = 收款金额 − 优惠金额，入账按优惠后金额计算</div></div></div>
       <div class="form-row"><label class="req">资金流水号</label><div class="ctrl"><input type="text" id="subFlow" placeholder="请输入交易流水号 / 转账单号"><div class="form-tip">同一流水号全局只能成功入账一次：任意订单下存在「待审核/已通过」记录即硬拦截，已驳回/已撤回不占用</div></div></div>
       <div class="form-row"><label class="req">付款方式</label><div class="ctrl"><select id="subChannel" style="width:160px" onchange="onChannelChange()"><option>企业微信</option><option>支付宝</option><option>对公转账</option></select></div></div>
       <div class="form-row" id="subBankRow" style="display:none"><label class="req">付款银行</label><div class="ctrl"><input type="text" id="subBank" placeholder="请输入付款银行，如：招商银行"><div class="form-tip">选择「对公转账」时填写，不限制格式，自由填写付款银行名称</div></div></div>
@@ -669,6 +670,7 @@ function openSubmit(mode,id){
       if(alive.includes(cb.value)) cb.checked=true;
     });
     document.getElementById("subAmount").value=d.amount;
+    document.getElementById("subDiscount").value=d.discount||"";
     document.getElementById("subFlow").value=d.flow;
     document.getElementById("subChannel").value=d.channel;
     document.getElementById("subBank").value=d.bank||"";
@@ -678,6 +680,7 @@ function openSubmit(mode,id){
     if(removed>0) toast(`提示：${removed} 个已结清/不可用账期已自动剔除`);
   }else{
     document.getElementById("subAmount").value="";
+    document.getElementById("subDiscount").value="";
     document.getElementById("subFlow").value="";
     document.getElementById("subChannel").value="企业微信";
     document.getElementById("subBank").value="";
@@ -737,6 +740,8 @@ function doSubmit(){
   const o=orders.find(x=>x.no===orderNo); if(!o) return;
   const labels=selectedPeriods();
   const amount=parseFloat(document.getElementById("subAmount").value);
+  const discount=parseFloat(document.getElementById("subDiscount").value);
+  const discountVal=isNaN(discount)?0:discount;
   const channel=document.getElementById("subChannel").value;
   const bank=document.getElementById("subBank").value.trim();
   if(!labels.length){toast("请至少选择一个关联账期");return;}
@@ -747,6 +752,7 @@ function doSubmit(){
     toast("所选账期须包含最早未结清账期且账期连续");return;
   }
   if(isNaN(amount)||amount<=0){toast("请输入正确的收款金额");document.getElementById("subAmount").focus();return;}
+  if(discountVal<0||discountVal>=amount){toast("优惠金额须大于等于 0 且小于收款金额");document.getElementById("subDiscount").focus();return;}
   const totalRemain=labels.reduce((s,l)=>{const b=o.bills.find(x=>x.label===l);return s+(b?b.remain:0);},0);
   if(amount>totalRemain){toast(`收款金额不能超过所选账期剩余应还合计 ${fmt(totalRemain)}`);return;}
   /* 代扣在途拦截：所选账期已有代扣请求在途时拒绝提交（PRD） */
@@ -766,9 +772,9 @@ function doSubmit(){
     /* 重新提交：更新原记录；原提交快照+驳回原因转入历史版本（可追溯） */
     const d=resubmitRow;
     if(!d.versions) d.versions=[];
-    d.versions.push({t:d.time, periods:[...(d.periods||[])], billType:d.billType, amount:d.amount, flow:d.flow, channel:d.channel, bank:d.bank, date:d.date, note:d.note||"", rejectBy:d.rejectBy, rejectAt:d.rejectAt, rejectReason:d.rejectReason});
+    d.versions.push({t:d.time, periods:[...(d.periods||[])], billType:d.billType, amount:d.amount, discount:d.discount||0, flow:d.flow, channel:d.channel, bank:d.bank, date:d.date, note:d.note||"", rejectBy:d.rejectBy, rejectAt:d.rejectAt, rejectReason:d.rejectReason});
     delete d.rejectBy; delete d.rejectAt; delete d.rejectReason;
-    d.periods=labels; d.period=labels[0]; d.billType=RENT_TYPE; d.flow=flow; d.channel=channel; d.bank=channel==="对公转账"?bank:""; d.amount=amount;
+    d.periods=labels; d.period=labels[0]; d.billType=RENT_TYPE; d.flow=flow; d.channel=channel; d.bank=channel==="对公转账"?bank:""; d.amount=amount; d.discount=discountVal;
     d.date=date; d.shots=[...subShotArr]; d.note=document.getElementById("subNote").value.trim();
     d.status="pending"; d.deduct="paused"; d.time=now(); d.sub="李娜";
     d.bill={periods:labels, due:totalRemain, paid:0, remain:totalRemain};
@@ -776,7 +782,7 @@ function doSubmit(){
     const nd={id:Math.max(...data.map(d=>d.id))+1, order:orderNo,
       auditNo:"SH"+now().replace(/[-: ]/g,"").slice(0,14)+String(Math.max(...data.map(d=>d.id))+1).padStart(3,"0"),
       user:userNameOf(orderNo), periods:labels, period:labels[0], billType:RENT_TYPE,
-      flow, channel, bank:channel==="对公转账"?bank:"", amount, date,
+      flow, channel, bank:channel==="对公转账"?bank:"", amount, discount:discountVal, date,
       sub:"李娜", time:now(), status:"pending", deduct:"paused",
       bill:{periods:labels, due:totalRemain, paid:0, remain:totalRemain},
       shots:[...subShotArr], note:document.getElementById("subNote").value.trim()};
@@ -823,20 +829,19 @@ function render(){
     const act=d.status==="pending"?"审核":"查看";
     const ops=`<span class="link-btn ${d.status==="pending"?"success":""}" onclick="openDrawer(${d.id})">${act}</span>`;
     return `<tr>
-      <td><span class="order-no" style="font-size:11px">${d.auditNo||"—"}</span></td>
       <td><span class="order-no" onclick="openDrawer(${d.id})">${d.order}</span></td>
       <td>${d.user||"—"}</td>
       <td>${periodsOf(d).join("、")}</td>
       <td>${d.flow}</td>
       <td><span class="tag tag-channel">${d.channel}</span></td>
-      <td style="color:var(--danger);font-weight:600">${fmt(d.amount)}</td>
+      <td style="color:var(--danger);font-weight:600">${fmt(d.amount)}${d.discount?`<span style="color:var(--success);font-size:11px">（优惠 ${fmt(d.discount)}）</span>`:""}</td>
       <td>${d.date}</td><td>${d.sub}</td><td>${d.time}</td>
       <td>${auditBy}</td>
       <td>${auditAt}</td>
       <td><span class="tag ${s.c}">${s.t}</span></td>
       <td style="white-space:nowrap">${ops}</td>
     </tr>`;
-  }).join(""):'<tr><td colspan="14" class="empty-row">暂无数据，请调整筛选条件</td></tr>';
+  }).join(""):'<tr><td colspan="13" class="empty-row">暂无数据，请调整筛选条件</td></tr>';
   document.getElementById("pagerTotal").textContent=`共 ${list.length} 条`;
 }
 
@@ -914,11 +919,12 @@ function openDrawer(id, view){
     </div>
     <div class="sec-title">交易信息（提交内容）</div>
     <div class="info-grid">
-      <div class="info-item"><span class="k">审核单号</span><span class="v">${d.auditNo||"—"}</span></div>
       <div class="info-item"><span class="k">交易流水号</span><span class="v">${d.flow}</span></div>
       <div class="info-item"><span class="k">付款方式</span><span class="v">${d.channel}</span></div>
       ${d.bank?`<div class="info-item"><span class="k">付款银行</span><span class="v">${d.bank}</span></div>`:""}
       <div class="info-item"><span class="k">交易金额</span><span class="v amount-highlight">${fmt(d.amount)}</span></div>
+      ${d.discount?`<div class="info-item"><span class="k">优惠金额</span><span class="v" style="color:var(--success);font-weight:600">−${fmt(d.discount)}</span></div>
+      <div class="info-item"><span class="k">实际入账</span><span class="v">${fmt(d.amount-d.discount)}（收款 − 优惠）</span></div>`:""}
       <div class="info-item"><span class="k">交易日期</span><span class="v">${d.date}</span></div>
       <div class="info-item"><span class="k">提交人</span><span class="v">${d.sub}</span></div>
       <div class="info-item"><span class="k">提交时间</span><span class="v">${d.time}</span></div>
@@ -972,12 +978,14 @@ function doPass(){
   /* 审核通过金额校验（普通租金账单）：交易金额超过所选账单剩余应还时不允许通过 */
   const pl=periodsOf(d);
   const remTotal=pl.reduce((t,p)=>{const b=findBill(d.order,p);return t+(b?b.remain:0);},0);
-  if(d.amount>remTotal){
-    toast(`金额超出，请确认还款账期：交易金额 ${fmt(d.amount)} 超过所选账单剩余应还 ${fmt(remTotal)}，不允许通过`);return;
+  /* 实际入账金额 = 收款金额 − 优惠金额 */
+  const net=(d.amount||0)-(d.discount||0);
+  if(net>remTotal){
+    toast(`金额超出，请确认还款账期：入账金额 ${fmt(net)}（收款 ${fmt(d.amount)}${d.discount?` − 优惠 ${fmt(d.discount)}`:""}）超过所选账单剩余应还 ${fmt(remTotal)}，不允许通过`);return;
   }
   d.status="pass"; d.deduct="resumed";
   /* 多账期顺序冲抵：按账期顺序依次冲抵，剩余滚动到下一账期（首版不新增分摊规则） */
-  let remaining=d.amount;
+  let remaining=net;
   pl.forEach(p=>{
     const ob=findBill(d.order,p);
     if(!ob||remaining<=0) return;
@@ -990,7 +998,7 @@ function doPass(){
   refreshOrderState(d.order);
   hideModal("passModal"); closeDrawer(); render(); refreshCounts();
   if(curPage==="detail") renderOrderDetail(curOrder);
-  toast(`已通过：${fmt(d.amount)} 已自动入账至 ${d.order} 对应账单，代扣能力已恢复`);
+  toast(`已通过：${fmt(net)}（收款 ${fmt(d.amount)}${d.discount?` − 优惠 ${fmt(d.discount)}`:""}）已自动入账至 ${d.order} 对应账单，代扣能力已恢复`);
 }
 
 /* ===== 驳回 ===== */
