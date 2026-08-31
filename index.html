@@ -214,15 +214,8 @@
     <div class="topbar">
       <div class="breadcrumb" id="crumb">财务管理 / <b>入账审核</b></div>
       <div class="topbar-right">
-        <div class="notice-wrap">
-          <span class="bell-btn" onclick="toggleNotice(event)">🔔<span class="badge" id="noticeBadge" style="display:none">0</span></span>
-          <div class="notice-panel" id="noticePanel" onclick="event.stopPropagation()">
-            <div class="notice-head">消息通知<span class="clr" onclick="readAllNotices(event)">全部已读</span></div>
-            <div class="notice-list" id="noticeList"></div>
-          </div>
-        </div>
         <div class="avatar" id="userAvatar">财</div>
-        <span id="userName">财务-王芳</span>
+        <span id="userName">王芳</span>
       </div>
     </div>
 
@@ -230,43 +223,6 @@
 
       <!-- ===== 页面：入账审核 ===== -->
       <div id="pageAudit">
-
-      <!-- 流程提示 -->
-      <div class="flow-tip">
-        <div class="flow-step"><span class="flow-dot">1</span>业务提交（订单详情 · 新建线下收款流水）</div><span class="flow-arrow">→</span>
-        <div class="flow-step hl"><span class="flow-dot">⏸</span>暂停账单代扣</div><span class="flow-arrow">→</span>
-        <div class="flow-step"><span class="flow-dot">2</span>财务审核</div><span class="flow-arrow">→</span>
-        <div class="flow-step"><span class="flow-dot">▶</span>恢复代扣 + 自动入账</div>
-        <div class="legend">
-          <span><i style="background:#B7791F"></i>待审核</span>
-          <span><i style="background:#0E9F6E"></i>已通过</span>
-          <span><i style="background:#C0392B"></i>已驳回</span>
-        </div>
-      </div>
-
-      <!-- 统计卡 -->
-      <div class="stat-row">
-        <div class="stat-card">
-          <div class="label">待审核</div>
-          <div class="value v-warn"><span id="stPending">5</span><span class="unit">笔</span></div>
-          <div class="sub">代扣已暂停，请及时处理</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">今日已通过入账</div>
-          <div class="value v-success"><span id="stPass">6</span><span class="unit">笔</span></div>
-          <div class="sub">入账金额 <span id="stPassAmt">¥13,460.00</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="label">今日已驳回</div>
-          <div class="value v-danger"><span id="stReject">2</span><span class="unit">笔</span></div>
-          <div class="sub">待提交人修改后重新提交</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">待审核金额合计</div>
-          <div class="value v-primary" id="stPendingAmt">¥12,200.00</div>
-          <div class="sub">涉及 <span id="stPendingCnt">5</span> 笔账单</div>
-        </div>
-      </div>
 
       <!-- 列表 -->
       <div class="card">
@@ -282,16 +238,15 @@
           <label>用户姓名</label><input type="text" id="fUser" placeholder="请输入姓名" style="width:100px">
           <label>付款方式</label>
           <select id="fChannel" style="width:100px"><option value="">全部</option><option>企业微信</option><option>支付宝</option><option>对公转账</option></select>
-          <label>提交人</label><input type="text" id="fSubmit" placeholder="客服/姓名" style="width:110px">
+          <label>提交人</label><input type="text" id="fSubmit" placeholder="姓名" style="width:100px">
           <label>提交时间</label><input type="text" id="fDate" placeholder="2026-08-20 ~ 2026-08-27" style="width:160px">
           <button class="btn btn-primary" onclick="doSearch()">查询</button>
           <button class="btn" onclick="doReset()">重置</button>
-          <button class="btn" style="margin-left:auto" onclick="toast('已按当前筛选条件导出 Excel（演示）')">导出</button>
         </div>
         <table>
           <thead>
             <tr>
-              <th>审核单号</th><th>订单号</th><th>用户姓名</th><th>账期</th><th>账单类型</th><th>交易流水号</th><th>付款方式</th><th>交易金额</th><th>交易日期</th><th>提交人</th><th>提交时间</th><th>审核人</th><th>审核完成时间</th><th>代扣状态</th><th>状态</th><th>操作</th>
+              <th>审核单号</th><th>订单号</th><th>用户姓名</th><th>账期</th><th>交易流水号</th><th>付款方式</th><th>交易金额</th><th>交易日期</th><th>提交人</th><th>提交时间</th><th>审核人</th><th>审核完成时间</th><th>状态</th><th>操作</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -351,7 +306,7 @@
         <div class="card">
           <table>
             <thead>
-              <tr><th>期次 / 账期</th><th>账单类型</th><th>应还金额</th><th>已还金额</th><th>剩余应还</th><th>还款日</th><th>代扣状态</th><th>账单状态</th></tr>
+              <tr><th>期次 / 账期</th><th>应还金额</th><th>已还金额</th><th>剩余应还</th><th>还款日</th><th>代扣状态</th><th>账单状态</th></tr>
             </thead>
             <tbody id="odBills"></tbody>
           </table>
@@ -429,10 +384,7 @@
     <div class="modal-head" id="subModalTitle">💵 新建线下收款流水</div>
     <div class="modal-body">
       <div id="subRejectBanner"></div>
-      <div class="form-row"><label class="req">关联订单</label><div class="ctrl"><input type="text" id="subOrder" readonly style="background:#F3F4F6"><div class="form-tip">仅还款中/逾期订单可提交，已完结、司法处置中不可提交</div></div></div>
-      <div class="form-row"><label class="req">账单类型</label><div class="ctrl"><select id="subBillType" style="width:200px" onchange="onTypeChange()">
-        <option>普通租金</option><option>买断金</option><option>赔偿金</option><option>司法金</option><option>归还逾期金</option><option>邮费</option><option>履约保证金</option><option>催收协商</option>
-      </select><div class="form-tip">默认普通租金账单，可切换其他类型</div></div></div>
+      <div class="form-row"><label class="req">关联订单</label><div class="ctrl"><input type="text" id="subOrder" readonly style="background:#F3F4F6"><div class="form-tip">仅还款中/逾期订单可提交，已完结、司法处置中不可提交；本次仅支持租金账单入账审核</div></div></div>
       <div class="form-row"><label class="req">关联账期</label><div class="ctrl"><div id="subPeriodList" class="period-list"></div><div class="form-tip" id="subRemainTip"></div></div></div>
       <div class="form-row"><label class="req">收款金额</label><div class="ctrl"><input type="text" id="subAmount" placeholder="请输入本次收款金额（元）"></div></div>
       <div class="form-row"><label class="req">资金流水号</label><div class="ctrl"><input type="text" id="subFlow" placeholder="请输入交易流水号 / 转账单号"><div class="form-tip">同一流水号全局只能成功入账一次：任意订单下存在「待审核/已通过」记录即硬拦截，已驳回/已撤回不占用</div></div></div>
@@ -454,101 +406,52 @@
 <script>
 /* ===== 模拟数据（含PRD最新规则：待审核=代扣暂停，通过/驳回=代扣恢复） ===== */
 const data = [
-  {id:1, order:"BJZ20260815001", period:"2026-08期(第3期)", flow:"WXP240826001", channel:"企业微信", amount:3200.00, date:"2026-08-26", sub:"客服-李娜", time:"2026-08-27 09:42", status:"pending", deduct:"paused",
+  {id:1, order:"BJZ20260815001", period:"2026-08期(第3期)", flow:"WXP240826001", channel:"企业微信", amount:3200.00, date:"2026-08-26", sub:"李娜", time:"2026-08-27 09:42", status:"pending", deduct:"paused",
    bill:{period:"2026-08期(第3期)", due:3200.00, paid:0, remain:3200.00},
    shots:["支付截图_1.jpg","支付截图_2.jpg"], note:"用户协商先还一期，剩余下月补齐"},
-  {id:2, order:"BJZ20260722003", period:"2026-08期(第5期)", flow:"DG240825887", channel:"对公转账", bank:"招商银行", amount:1850.00, date:"2026-08-25", sub:"客服-张强", time:"2026-08-27 08:15", status:"pending", deduct:"paused",
+  {id:2, order:"BJZ20260722003", period:"2026-08期(第5期)", flow:"DG240825887", channel:"对公转账", bank:"招商银行", amount:1850.00, date:"2026-08-25", sub:"张强", time:"2026-08-27 08:15", status:"pending", deduct:"paused",
    bill:{period:"2026-08期(第5期)", due:1850.00, paid:0, remain:1850.00},
    shots:["对公转账回单.jpg"], note:"对公转账，已核对回单"},
-  {id:3, order:"BJZ20260610012", period:"2026-08期(第9期)", flow:"ZFB240827010", channel:"支付宝", amount:4400.00, date:"2026-08-27", sub:"客服-李娜", time:"2026-08-27 11:03", status:"pending", deduct:"paused",
+  {id:3, order:"BJZ20260610012", period:"2026-08期(第9期)", flow:"ZFB240827010", channel:"支付宝", amount:4400.00, date:"2026-08-27", sub:"李娜", time:"2026-08-27 11:03", status:"pending", deduct:"paused",
    bill:{period:"2026-08期(第9期)", due:4600.00, paid:200.00, remain:4400.00},
    shots:["支付宝转账截图_1.jpg","支付宝转账截图_2.jpg","支付宝转账截图_3.jpg"], note:"部分还款，先还4400元"},
-  {id:4, order:"BJZ20260518006", period:"2026-08期(第4期)", flow:"WXP240826102", channel:"企业微信", amount:2800.00, date:"2026-08-26", sub:"客服-张强", time:"2026-08-26 15:20", status:"pass", deduct:"resumed",
+  {id:4, order:"BJZ20260518006", period:"2026-08期(第4期)", flow:"WXP240826102", channel:"企业微信", amount:2800.00, date:"2026-08-26", sub:"张强", time:"2026-08-26 15:20", status:"pass", deduct:"resumed",
    bill:{period:"2026-08期(第4期)", due:2800.00, paid:2800.00, remain:0.00},
-   shots:["支付截图_1.jpg"], note:"", passBy:"财务-王芳", passAt:"2026-08-26 16:05"},
-  {id:5, order:"BJZ20260412002", period:"2026-08期(第6期)", flow:"DG240825330", channel:"对公转账", bank:"工商银行", amount:5600.00, date:"2026-08-25", sub:"客服-李娜", time:"2026-08-25 10:11", status:"pass", deduct:"resumed",
+   shots:["支付截图_1.jpg"], note:"", passBy:"王芳", passAt:"2026-08-26 16:05"},
+  {id:5, order:"BJZ20260412002", period:"2026-08期(第6期)", flow:"DG240825330", channel:"对公转账", bank:"工商银行", amount:5600.00, date:"2026-08-25", sub:"李娜", time:"2026-08-25 10:11", status:"pass", deduct:"resumed",
    bill:{period:"2026-08期(第6期)", due:5600.00, paid:5600.00, remain:0.00},
-   shots:["对公转账回单.jpg","对公转账回单_2.jpg"], note:"", passBy:"财务-王芳", passAt:"2026-08-25 14:30"},
-  {id:6, order:"BJZ20260330009", period:"2026-08期(第3期)", flow:"WXP240824556", channel:"企业微信", amount:1600.00, date:"2026-08-24", sub:"客服-张强", time:"2026-08-24 09:50", status:"pass", deduct:"resumed",
+   shots:["对公转账回单.jpg","对公转账回单_2.jpg"], note:"", passBy:"王芳", passAt:"2026-08-25 14:30"},
+  {id:6, order:"BJZ20260330009", period:"2026-08期(第3期)", flow:"WXP240824556", channel:"企业微信", amount:1600.00, date:"2026-08-24", sub:"张强", time:"2026-08-24 09:50", status:"pass", deduct:"resumed",
    bill:{period:"2026-08期(第3期)", due:3200.00, paid:1600.00, remain:1600.00},
-   shots:["支付截图_1.jpg"], note:"部分还款", passBy:"财务-王芳", passAt:"2026-08-24 11:20"},
-  {id:7, order:"BJZ20260221005", period:"2026-08期(第7期)", flow:"ZFB240823201", channel:"支付宝", amount:2300.00, date:"2026-08-23", sub:"客服-李娜", time:"2026-08-23 16:40", status:"pass", deduct:"resumed",
+   shots:["支付截图_1.jpg"], note:"部分还款", passBy:"王芳", passAt:"2026-08-24 11:20"},
+  {id:7, order:"BJZ20260221005", period:"2026-08期(第7期)", flow:"ZFB240823201", channel:"支付宝", amount:2300.00, date:"2026-08-23", sub:"李娜", time:"2026-08-23 16:40", status:"pass", deduct:"resumed",
    bill:{period:"2026-08期(第7期)", due:2300.00, paid:2300.00, remain:0.00},
-   shots:["支付宝转账截图_1.jpg"], note:"", passBy:"财务-王芳", passAt:"2026-08-23 17:15"},
-  {id:8, order:"BJZ20260115011", period:"2026-08期(第2期)", flow:"WXP240822318", channel:"企业微信", amount:1900.00, date:"2026-08-22", sub:"客服-张强", time:"2026-08-22 14:05", status:"pass", deduct:"resumed",
+   shots:["支付宝转账截图_1.jpg"], note:"", passBy:"王芳", passAt:"2026-08-23 17:15"},
+  {id:8, order:"BJZ20260115011", period:"2026-08期(第2期)", flow:"WXP240822318", channel:"企业微信", amount:1900.00, date:"2026-08-22", sub:"张强", time:"2026-08-22 14:05", status:"pass", deduct:"resumed",
    bill:{period:"2026-08期(第2期)", due:1900.00, paid:1900.00, remain:0.00},
-   shots:["支付截图_1.jpg","支付截图_2.jpg"], note:"", passBy:"财务-王芳", passAt:"2026-08-22 15:00"},
-  {id:9, order:"BJZ20260102008", period:"2026-08期(第10期)", flow:"DG240821900", channel:"对公转账", bank:"建设银行", amount:3800.00, date:"2026-08-21", sub:"客服-李娜", time:"2026-08-21 10:30", status:"reject", deduct:"resumed",
+   shots:["支付截图_1.jpg","支付截图_2.jpg"], note:"", passBy:"王芳", passAt:"2026-08-22 15:00"},
+  {id:9, order:"BJZ20260102008", period:"2026-08期(第10期)", flow:"DG240821900", channel:"对公转账", bank:"建设银行", amount:3800.00, date:"2026-08-21", sub:"李娜", time:"2026-08-21 10:30", status:"reject", deduct:"resumed",
    bill:{period:"2026-08期(第10期)", due:3800.00, paid:0, remain:3800.00},
-   shots:["对公转账回单.jpg"], note:"", rejectBy:"财务-王芳", rejectAt:"2026-08-21 13:45",
+   shots:["对公转账回单.jpg"], note:"", rejectBy:"王芳", rejectAt:"2026-08-21 13:45",
    rejectReason:"交易截图金额与提交金额不符，请核对后重新提交"},
-  {id:10, order:"BJZ20260715004", period:"2026-08期(第2期)", flow:"WXP240827056", channel:"企业微信", amount:1250.00, date:"2026-08-27", sub:"客服-王敏", time:"2026-08-27 10:58", status:"pending", deduct:"paused",
+  {id:10, order:"BJZ20260715004", period:"2026-08期(第2期)", flow:"WXP240827056", channel:"企业微信", amount:1250.00, date:"2026-08-27", sub:"王敏", time:"2026-08-27 10:58", status:"pending", deduct:"paused",
    bill:{period:"2026-08期(第2期)", due:2500.00, paid:1250.00, remain:1250.00},
    shots:["支付截图_1.jpg"], note:"用户分两笔还款，此为第1笔"},
-  {id:11, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"ZFB240826433", channel:"支付宝", amount:2100.00, date:"2026-08-26", sub:"客服-王敏", time:"2026-08-26 17:26", status:"reject", deduct:"resumed",
+  {id:11, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"ZFB240826433", channel:"支付宝", amount:2100.00, date:"2026-08-26", sub:"王敏", time:"2026-08-26 17:26", status:"reject", deduct:"resumed",
    bill:{period:"2026-08期(第8期)", due:2100.00, paid:0, remain:2100.00},
-   shots:["支付宝转账截图_1.jpg","支付宝转账截图_2.jpg"], note:"柜台转账", rejectBy:"财务-王芳", rejectAt:"2026-08-27 09:15",
+   shots:["支付宝转账截图_1.jpg","支付宝转账截图_2.jpg"], note:"柜台转账", rejectBy:"王芳", rejectAt:"2026-08-27 09:15",
    rejectReason:"未查询到该笔到账记录，请核实到账后再提交"},
   /* 孙先生订单演示完整闭环：驳回 → 部分入账通过(600) → 剩余(1500)待审核 */
-  {id:12, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"DG240827088", channel:"对公转账", bank:"招商银行", amount:600.00, date:"2026-08-27", sub:"客服-王敏", time:"2026-08-27 10:12", status:"pass", deduct:"resumed",
+  {id:12, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"DG240827088", channel:"对公转账", bank:"招商银行", amount:600.00, date:"2026-08-27", sub:"王敏", time:"2026-08-27 10:12", status:"pass", deduct:"resumed",
    bill:{period:"2026-08期(第8期)", due:2100.00, paid:600.00, remain:1500.00},
-   shots:["对公转账回单.jpg"], note:"用户分两笔还款，此为第1笔", passBy:"财务-王芳", passAt:"2026-08-27 11:02"},
-  {id:13, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"WXP240827123", channel:"企业微信", amount:1500.00, date:"2026-08-27", sub:"客服-王敏", time:"2026-08-27 13:10", status:"pending", deduct:"paused",
+   shots:["对公转账回单.jpg"], note:"用户分两笔还款，此为第1笔", passBy:"王芳", passAt:"2026-08-27 11:02"},
+  {id:13, order:"BJZ20260408010", period:"2026-08期(第8期)", flow:"WXP240827123", channel:"企业微信", amount:1500.00, date:"2026-08-27", sub:"王敏", time:"2026-08-27 13:10", status:"pending", deduct:"paused",
    bill:{period:"2026-08期(第8期)", due:2100.00, paid:600.00, remain:1500.00},
    shots:["支付截图_1.jpg","支付截图_2.jpg"], note:"剩余1500元当日付清（第2笔）"},
 ];
 
 let curTab="all", curRow=null, drawerView="audit";
 let filter={order:"",user:"",channel:"",submit:"",date:""};
-
-/* ===== 站内消息通知（最简版：顶栏铃铛下拉） ===== */
-/* to: finance=财务（审核人） / sub=提交人（业务/客服）；与当前页面角色联动 */
-let notices=[
-  {id:1,to:"finance",type:"pending",title:"新提交待审核：订单 BJZ20260408010 · ¥1,500.00（企业微信），第8期账单代扣已暂停",time:"2026-08-27 13:10",read:false,order:"BJZ20260408010"},
-  {id:2,to:"sub",type:"reject",title:"入账审核被驳回：订单 BJZ20260408010 · ¥2,100.00，原因：未查询到该笔到账记录，请核实到账后再提交",time:"2026-08-27 09:15",read:false,order:"BJZ20260408010"},
-  {id:3,to:"sub",type:"pass",title:"入账审核已通过：订单 BJZ20260408010 · ¥600.00 已自动入账至第8期账单",time:"2026-08-27 11:02",read:true,order:"BJZ20260408010"},
-  {id:4,to:"finance",type:"pending",title:"新提交待审核：订单 BJZ20260815001 · ¥3,200.00（企业微信），第3期账单代扣已暂停",time:"2026-08-27 09:42",read:true,order:"BJZ20260815001"},
-];
-let noticeSeq=100;
-function notify(to,type,title,order){
-  notices.unshift({id:++noticeSeq,to,type,title,order,time:now(),read:false});
-  renderNotices();
-}
-function curRole(){return curPage==="audit"?"finance":"sub";}
-function toggleNotice(e){
-  e.stopPropagation();
-  const p=document.getElementById("noticePanel");
-  p.classList.toggle("show");
-  if(p.classList.contains("show")) renderNotices();
-}
-function renderNotices(){
-  const role=curRole();
-  const list=notices.filter(n=>n.to===role);
-  document.getElementById("noticeList").innerHTML=list.length?list.map(n=>`
-    <div class="notice-item ${n.read?"read":""}" onclick="readNotice(${n.id})">
-      <span class="dot"></span>
-      <div><div class="t">${n.title}</div><div class="tm">${n.time}</div></div>
-    </div>`).join(""):'<div class="notice-empty">暂无消息</div>';
-  const unread=notices.filter(n=>n.to===role&&!n.read).length;
-  const badge=document.getElementById("noticeBadge");
-  badge.textContent=unread;
-  badge.style.display=unread?"":"none";
-}
-function readNotice(id){
-  const n=notices.find(x=>x.id===id); if(!n) return;
-  n.read=true;
-  document.getElementById("noticePanel").classList.remove("show");
-  renderNotices();
-  /* 点击直达：待审核→入账审核页；通过/驳回→对应订单详情 */
-  if(n.type==="pending"){switchPage("audit");}
-  else{switchPage("detail",n.order);}
-}
-function readAllNotices(e){
-  e.stopPropagation();
-  const role=curRole();
-  notices.forEach(n=>{if(n.to===role) n.read=true;});
-  renderNotices();
-}
 
 /* ===== 订单数据（订单列表 / 订单详情，业务视角） ===== */
 /* cur=当前所在期次；paused=true 表示当前期存在待审核流水（代扣暂停） */
@@ -557,8 +460,7 @@ const orderDefs=[
   {no:"BJZ20260722003", user:"陈女士 159****3308", goods:"MacBook Air M3 13寸", monthly:1850, periods:10, cur:5, curDue:1850, curPaid:0, paused:true},
   {no:"BJZ20260610012", user:"刘先生 186****7742", goods:"iPhone 14 Plus 128G", monthly:2300, periods:12, cur:9, curDue:4600, curPaid:200, paused:true, overdue:true},
   {no:"BJZ20260715004", user:"赵女士 137****2216", goods:"iPad Pro 11寸 + Apple Pencil", monthly:2500, periods:6, cur:2, curDue:2500, curPaid:1250, paused:true},
-  {no:"BJZ20260408010", user:"孙先生 150****9023", goods:"华为 Mate 60 Pro 512G", monthly:2100, periods:12, cur:8, curDue:2100, curPaid:600, paused:true,
-   extraBills:[{type:"赔偿金", label:"赔偿金-202608", due:1200, paid:0, repayDay:"2026-08-20"}]},
+  {no:"BJZ20260408010", user:"孙先生 150****9023", goods:"华为 Mate 60 Pro 512G", monthly:2100, periods:12, cur:8, curDue:2100, curPaid:600, paused:true},
   {no:"BJZ20260102008", user:"周女士 135****6681", goods:"戴森 V12 吸尘器", monthly:3800, periods:10, cur:10, curDue:3800, curPaid:0, paused:false},
 ];
 
@@ -579,10 +481,6 @@ const orders=orderDefs.map(o=>{
       isCur
     });
   }
-  /* 附加非租金类型账单（如赔偿金），用于演示账单类型切换 */
-  (o.extraBills||[]).forEach(eb=>{
-    bills.push({...eb, paid:eb.paid||0, remain:(eb.due||0)-(eb.paid||0), deduct:(eb.due||0)-(eb.paid||0)>0?"on":"off", isCur:false});
-  });
   const remainTotal=bills.reduce((s,b)=>s+b.remain,0);
   const paidPeriods=bills.filter(b=>b.remain===0).length;
   return {...o, bills, remainTotal, paidPeriods, total:o.monthly*o.periods,
@@ -611,18 +509,17 @@ function switchPage(p, orderNo){
   document.getElementById("navOrders").classList.toggle("active",p!=="audit");
   const crumb=document.getElementById("crumb");
   const avatar=document.getElementById("userAvatar"), name=document.getElementById("userName");
-  renderNotices();                            /* 角色切换后刷新铃铛消息 */
   if(p==="audit"){
     crumb.innerHTML="财务管理 / <b>入账审核</b>";
-    avatar.textContent="财"; name.textContent="财务-王芳";
+    avatar.textContent="财"; name.textContent="王芳";
   }else if(p==="orders"){
     crumb.innerHTML="订单管理 / <b>订单列表</b>";
-    avatar.textContent="李"; name.textContent="客服-李娜";
+    avatar.textContent="李"; name.textContent="李娜";
     renderOrders();
   }else{
     curOrder=orderNo||curOrder;
     crumb.innerHTML='订单管理 / <b>订单详情</b>';
-    avatar.textContent="李"; name.textContent="客服-李娜";
+    avatar.textContent="李"; name.textContent="李娜";
     renderOrderDetail(curOrder);
   }
 }
@@ -684,7 +581,6 @@ function renderOrderDetail(no){
       :(b.isCur?'<span class="tag tag-pending">还款中</span>':'<span class="tag tag-info">未到期</span>');
     return `<tr>
       <td>${b.label}${b.isCur?' <span style="color:var(--text-light);font-size:11px">当前期</span>':''}</td>
-      <td><span class="tag tag-channel">${b.type||"普通租金"}</span></td>
       <td>${fmt(b.due)}</td>
       <td>${fmt(b.paid)}</td>
       <td style="${b.remain>0?'color:var(--danger);font-weight:600':''}">${fmt(b.remain)}</td>
@@ -730,16 +626,17 @@ function refreshOrderState(orderNo){
 
 /* ===== 线下收款流水录入弹窗（新建 / 重新提交共用同一表单，区别仅在于驳回提示与数据回显） ===== */
 let subShotArr=[], submitMode="new", resubmitRow=null;
-function curType(){return document.getElementById("subBillType").value;}
-function typeBills(o,type){return o.bills.filter(b=>b.remain>0&&(b.type||"普通租金")===type);}
+/* 本次仅支持租金账单入账审核，固定普通租金类型 */
+const RENT_TYPE="普通租金";
+function rentBills(o){return o.bills.filter(b=>b.remain>0&&(b.type||RENT_TYPE)===RENT_TYPE);}
 function selectedPeriods(){return [...document.querySelectorAll("#subPeriodList input[type=checkbox]:checked")].map(c=>c.value);}
 /* 账期是否被锁定不可选：存在待审核/已撤回记录，或代扣在途 */
 function billLocked(o,b){
   const hasPending=data.some(x=>x.order===o.no&&(x.periods||[x.period]).includes(b.label)&&(x.status==="pending"||x.status==="withdraw"));
   return hasPending||b.deduct==="charging";
 }
-/* 所选类型下可选的未结清账期（PRD：待审核账期不可再次选中） */
-function selectableBills(o,type){return typeBills(o,type).filter(b=>!billLocked(o,b));}
+/* 可选未结清租金账期（PRD：待审核账期不可再次选中） */
+function selectableBills(o){return rentBills(o).filter(b=>!billLocked(o,b));}
 function openSubmit(mode,id){
   let d=null;
   if(mode==="resubmit"){
@@ -763,8 +660,6 @@ function openSubmit(mode,id){
   document.getElementById("subOrder").value=`${o.no}（${o.user}）`;
   const allUnpaid=o.bills.filter(b=>b.remain>0);
   if(!allUnpaid.length&&!d){toast("该订单账单已全部结清，无需登记收款");return;}
-  /* 账单类型（默认普通租金，重提时回显原类型） */
-  document.getElementById("subBillType").value=d?(d.billType||"普通租金"):"普通租金";
   renderPeriodList(o);
   if(submitMode==="resubmit"){
     /* 数据回显：账期(多选) / 金额 / 流水号 / 渠道 / 银行 / 日期 / 截图 / 备注 */
@@ -796,8 +691,7 @@ function openSubmit(mode,id){
   document.getElementById("submitModal").classList.add("show");
 }
 function renderPeriodList(o){
-  const type=curType();
-  const list=selectableBills(o,type).map(b=>({b,locked:billLocked(o,b)}));
+  const list=selectableBills(o).map(b=>({b,locked:billLocked(o,b)}));
   const box=document.getElementById("subPeriodList");
   box.innerHTML=list.length?list.map(({b})=>{
     const locked=billLocked(o,b);
@@ -808,11 +702,8 @@ function renderPeriodList(o){
       <span class="p-meta">剩余应还 ${fmt(b.remain)} · 应还日 ${b.repayDay}</span>
       ${hasPending?'<span class="tag tag-withdraw">待审核中不可选</span>':(b.deduct==="charging"?'<span class="tag tag-pause">代扣在途</span>':"")}
     </label>`;
-  }).join(""):'<div class="empty-row" style="padding:16px">该账单类型暂无未结清账单</div>';
+  }).join(""):'<div class="empty-row" style="padding:16px">暂无未结清的租金账单</div>';
   onPeriodToggle();
-}
-function onTypeChange(){
-  const o=orders.find(x=>x.no===curOrder); if(o) renderPeriodList(o);
 }
 function onPeriodToggle(){
   const o=orders.find(x=>x.no===curOrder);
@@ -844,17 +735,16 @@ function doSubmit(){
   const isRe=submitMode==="resubmit";
   const orderNo=isRe?resubmitRow.order:curOrder;
   const o=orders.find(x=>x.no===orderNo); if(!o) return;
-  const type=curType();
   const labels=selectedPeriods();
   const amount=parseFloat(document.getElementById("subAmount").value);
   const channel=document.getElementById("subChannel").value;
   const bank=document.getElementById("subBank").value.trim();
   if(!labels.length){toast("请至少选择一个关联账期");return;}
-  /* 账期连续性校验：须含所选类型最早可选的未结清账期且连续（PRD：待审核账期不可选） */
-  const validLabels=selectableBills(o,type).map(b=>b.label);
+  /* 账期连续性校验：须含最早可选的未结清租金账期且连续（PRD：待审核账期不可选） */
+  const validLabels=selectableBills(o).map(b=>b.label);
   const idx=labels.map(l=>validLabels.indexOf(l));
   if(idx.includes(-1)||Math.min(...idx)!==0||Math.max(...idx)-Math.min(...idx)!==labels.length-1){
-    toast("所选账期须包含该类型最早未结清账期且账期连续");return;
+    toast("所选账期须包含最早未结清账期且账期连续");return;
   }
   if(isNaN(amount)||amount<=0){toast("请输入正确的收款金额");document.getElementById("subAmount").focus();return;}
   const totalRemain=labels.reduce((s,l)=>{const b=o.bills.find(x=>x.label===l);return s+(b?b.remain:0);},0);
@@ -878,30 +768,29 @@ function doSubmit(){
     if(!d.versions) d.versions=[];
     d.versions.push({t:d.time, periods:[...(d.periods||[])], billType:d.billType, amount:d.amount, flow:d.flow, channel:d.channel, bank:d.bank, date:d.date, note:d.note||"", rejectBy:d.rejectBy, rejectAt:d.rejectAt, rejectReason:d.rejectReason});
     delete d.rejectBy; delete d.rejectAt; delete d.rejectReason;
-    d.periods=labels; d.period=labels[0]; d.billType=type; d.flow=flow; d.channel=channel; d.bank=channel==="对公转账"?bank:""; d.amount=amount;
+    d.periods=labels; d.period=labels[0]; d.billType=RENT_TYPE; d.flow=flow; d.channel=channel; d.bank=channel==="对公转账"?bank:""; d.amount=amount;
     d.date=date; d.shots=[...subShotArr]; d.note=document.getElementById("subNote").value.trim();
-    d.status="pending"; d.deduct="paused"; d.time=now(); d.sub="客服-李娜（重新提交）";
+    d.status="pending"; d.deduct="paused"; d.time=now(); d.sub="李娜";
     d.bill={periods:labels, due:totalRemain, paid:0, remain:totalRemain};
-    notify("finance","pending",`重新提交待审核：订单 ${orderNo} · ${fmt(amount)}（${channel}），${labels.join("、")}代扣已再次暂停`,orderNo);
   }else{
     const nd={id:Math.max(...data.map(d=>d.id))+1, order:orderNo,
       auditNo:"SH"+now().replace(/[-: ]/g,"").slice(0,14)+String(Math.max(...data.map(d=>d.id))+1).padStart(3,"0"),
-      user:userNameOf(orderNo), periods:labels, period:labels[0], billType:type,
+      user:userNameOf(orderNo), periods:labels, period:labels[0], billType:RENT_TYPE,
       flow, channel, bank:channel==="对公转账"?bank:"", amount, date,
-      sub:"客服-李娜", time:now(), status:"pending", deduct:"paused",
+      sub:"李娜", time:now(), status:"pending", deduct:"paused",
       bill:{periods:labels, due:totalRemain, paid:0, remain:totalRemain},
       shots:[...subShotArr], note:document.getElementById("subNote").value.trim()};
     data.unshift(nd);
-    notify("finance","pending",`新提交待审核：订单 ${orderNo} · ${fmt(amount)}（${channel}），${labels.join("、")}代扣已暂停`,orderNo);
   }
   /* 暂停全部选中账期代扣 */
   labels.forEach(l=>{const b=o.bills.find(x=>x.label===l); if(b) b.deduct="paused";});
   refreshOrderState(orderNo);
   hideModal("submitModal");
   render(); refreshCounts(); if(curPage==="detail") renderOrderDetail(curOrder);
-  toast(isRe
-    ?`重新提交成功：状态恢复「待审核」，${labels.join("、")}代扣能力再次暂停`
-    :`提交成功：已进入「入账审核」待审核队列，${labels.join("、")}代扣已暂停`);
+  /* 飞书机器人同步财务群（新增待审核） */
+  const feishuMsg=`【入账审核-新增待审核】订单 ${orderNo}（${userNameOf(orderNo)}）· ${labels.join("、")} · ${fmt(amount)}（${channel}${channel==="对公转账"&&bank?"/"+bank:""}）· 提交人 李娜 · 提交时间 ${now()}`;
+  toast((isRe?"重新提交成功：状态恢复「待审核」":"提交成功：已进入「入账审核」待审核队列")+`，${labels.join("、")}代扣已暂停；已通过飞书机器人同步至财务群`);
+  console.log("[飞书机器人→财务群]", feishuMsg);
 }
 
 const statusMap={pending:{t:"待审核",c:"tag-pending"},pass:{t:"已通过",c:"tag-pass"},reject:{t:"已驳回",c:"tag-reject"},withdraw:{t:"已撤回",c:"tag-withdraw"}};
@@ -928,31 +817,26 @@ function render(){
   const list=data.filter(d=>(curTab==="all"||d.status===curTab)&&matchFilter(d));
   tb.innerHTML=list.length?list.map(d=>{
     const s=statusMap[d.status];
-    const deduct=d.deduct==="paused"
-      ?'<span class="tag tag-pause">⏸ 代扣已暂停</span>'
-      :'<span class="tag tag-channel">▶ 代扣已恢复</span>';
     const auditBy=d.status==="pass"?(d.passBy||"—"):(d.status==="reject"?(d.rejectBy||"—"):"—");
     const auditAt=d.status==="pass"?(d.passAt||"—"):(d.status==="reject"?(d.rejectAt||"—"):"—");
-    let ops=`<span class="link-btn" onclick="openDrawer(${d.id})">查看</span>`;
-    if(d.status==="pending") ops+=`<span class="link-btn success" onclick="openPass(${d.id})">通过</span><span class="link-btn danger" onclick="openReject(${d.id})">驳回</span>`;
-    if(d.status==="reject") ops+=`<span class="link-btn" onclick="openSubmit('resubmit',${d.id})">重新提交</span>`;
+    /* 操作列：待审核→审核（弹窗内通过/驳回）；其他→查看（弹窗内关闭） */
+    const act=d.status==="pending"?"审核":"查看";
+    const ops=`<span class="link-btn ${d.status==="pending"?"success":""}" onclick="openDrawer(${d.id})">${act}</span>`;
     return `<tr>
       <td><span class="order-no" style="font-size:11px">${d.auditNo||"—"}</span></td>
       <td><span class="order-no" onclick="openDrawer(${d.id})">${d.order}</span></td>
       <td>${d.user||"—"}</td>
       <td>${periodsOf(d).join("、")}</td>
-      <td>${d.billType||"普通租金"}</td>
       <td>${d.flow}</td>
       <td><span class="tag tag-channel">${d.channel}</span></td>
       <td style="color:var(--danger);font-weight:600">${fmt(d.amount)}</td>
       <td>${d.date}</td><td>${d.sub}</td><td>${d.time}</td>
       <td>${auditBy}</td>
       <td>${auditAt}</td>
-      <td>${deduct}</td>
       <td><span class="tag ${s.c}">${s.t}</span></td>
       <td style="white-space:nowrap">${ops}</td>
     </tr>`;
-  }).join(""):'<tr><td colspan="16" class="empty-row">暂无数据，请调整筛选条件</td></tr>';
+  }).join(""):'<tr><td colspan="14" class="empty-row">暂无数据，请调整筛选条件</td></tr>';
   document.getElementById("pagerTotal").textContent=`共 ${list.length} 条`;
 }
 
@@ -1014,7 +898,7 @@ function openDrawer(id, view){
       <div class="pause-banner" style="margin:8px 0;padding:10px 12px">
         <div style="flex:1">
           <div style="font-weight:600">版本 ${d.versions.length-i} · ${v.t}${v.rejectReason?`　<span class="tag tag-reject">被驳回</span>`:""}</div>
-          <div style="margin-top:4px;line-height:1.8">账期：${v.periods.join("、")}（${v.billType}）｜金额：${fmt(v.amount)}｜流水号：${v.flow}｜付款方式：${v.channel}${v.bank?"（"+v.bank+"）":""}${v.rejectReason?`<br>驳回原因（${v.rejectBy} · ${v.rejectAt}）：${v.rejectReason}`:""}</div>
+          <div style="margin-top:4px;line-height:1.8">账期：${v.periods.join("、")}｜金额：${fmt(v.amount)}｜流水号：${v.flow}｜付款方式：${v.channel}${v.bank?"（"+v.bank+"）":""}${v.rejectReason?`<br>驳回原因（${v.rejectBy} · ${v.rejectAt}）：${v.rejectReason}`:""}</div>
         </div>
       </div>`).join("")}`
     :"";
@@ -1024,7 +908,7 @@ function openDrawer(id, view){
     <div class="info-grid">
       <div class="info-item"><span class="k">订单号</span><span class="v">${d.order}</span></div>
       <div class="info-item"><span class="k">用户姓名</span><span class="v">${d.user||"—"}</span></div>
-      <div class="info-item" style="grid-column:1/-1"><span class="k">关联账期</span><span class="v">${pl.join("、")}（${d.billType||"普通租金"}）</span></div>
+      <div class="info-item" style="grid-column:1/-1"><span class="k">关联账期</span><span class="v">${pl.join("、")}</span></div>
       <div class="info-item"><span class="k">剩余应还合计</span><span class="v ${remTotal===0?"":"amount-highlight"}">${fmt(remTotal)}</span></div>
       <div class="info-item"><span class="k">账单状态</span><span class="v">${remTotal===0?'<span class="tag tag-pass">已结清</span>':'<span class="tag tag-pending">未结清</span>'}</span></div>
     </div>
@@ -1058,10 +942,11 @@ function openDrawer(id, view){
       foot.innerHTML=`<span style="align-self:center;color:var(--text-light);font-size:12px;margin-right:auto">${d.status==="withdraw"?"已撤回，如需入账请重新发起提交":"已入账完成"}</span><button class="btn-lg" onclick="closeDrawer()">关 闭</button>`;
     }
   }else{
+    /* 财务视角：待审核→弹窗内操作通过/驳回；其他状态→仅查看关闭 */
     if(d.status==="pending"){
       foot.innerHTML=`<button class="btn-lg danger" onclick="openReject(${d.id})">✕ 审核驳回</button><button class="btn-lg primary" onclick="openPass(${d.id})">✔ 审核通过并入账</button>`;
     }else if(d.status==="reject"){
-      foot.innerHTML=`<span style="align-self:center;color:var(--text-light);font-size:12px;margin-right:auto">已驳回，等待提交人重新提交</span><button class="btn-lg plain" onclick="openSubmit('resubmit',${d.id})">↻ 重新提交</button>`;
+      foot.innerHTML=`<span style="align-self:center;color:var(--text-light);font-size:12px;margin-right:auto">该笔提交已被驳回，提交人可修改后重新提交</span><button class="btn-lg" onclick="closeDrawer()">关 闭</button>`;
     }else if(d.status==="withdraw"){
       foot.innerHTML=`<span style="align-self:center;color:var(--text-light);font-size:12px;margin-right:auto">提交人已撤回，如需入账请重新发起提交</span><button class="btn-lg" onclick="closeDrawer()">关 闭</button>`;
     }else{
@@ -1087,7 +972,7 @@ function doPass(){
   /* 审核通过金额校验（普通租金账单）：交易金额超过所选账单剩余应还时不允许通过 */
   const pl=periodsOf(d);
   const remTotal=pl.reduce((t,p)=>{const b=findBill(d.order,p);return t+(b?b.remain:0);},0);
-  if(d.billType==="普通租金"&&d.amount>remTotal){
+  if(d.amount>remTotal){
     toast(`金额超出，请确认还款账期：交易金额 ${fmt(d.amount)} 超过所选账单剩余应还 ${fmt(remTotal)}，不允许通过`);return;
   }
   d.status="pass"; d.deduct="resumed";
@@ -1101,11 +986,10 @@ function doPass(){
     ob.deduct=ob.remain===0?"off":"on";
     remaining-=hit;
   });
-  d.passBy="财务-王芳"; d.passAt=now();
+  d.passBy="王芳"; d.passAt=now();
   refreshOrderState(d.order);
   hideModal("passModal"); closeDrawer(); render(); refreshCounts();
   if(curPage==="detail") renderOrderDetail(curOrder);
-  notify("sub","pass",`入账审核已通过：订单 ${d.order} · ${fmt(d.amount)} 已自动入账至${pl.join("、")}账单，代扣能力已恢复`,d.order);
   toast(`已通过：${fmt(d.amount)} 已自动入账至 ${d.order} 对应账单，代扣能力已恢复`);
 }
 
@@ -1120,7 +1004,7 @@ function doReject(){
   if(!reason){toast("驳回原因必填，请填写后提交");document.getElementById("rejectReason").focus();return;}
   const d=curRow;
   d.status="reject"; d.deduct="resumed";
-  d.rejectBy="财务-王芳"; d.rejectAt=now(); d.rejectReason=reason;
+  d.rejectBy="王芳"; d.rejectAt=now(); d.rejectReason=reason;
   /* 恢复全部关联账期代扣 */
   (d.periods&&d.periods.length?d.periods:[d.period]).forEach(p=>{
     const ob=findBill(d.order,p);
@@ -1128,14 +1012,13 @@ function doReject(){
   });
   hideModal("rejectModal"); closeDrawer(); render(); refreshCounts();
   if(curPage==="detail") renderOrderDetail(curOrder);
-  notify("sub","reject",`入账审核被驳回：订单 ${d.order} · ${fmt(d.amount)}，原因：${reason}`,d.order);
   toast("已驳回：对应账单代扣能力已恢复，提交人可查看原因后重新提交");
 }
 
 /* ===== 提交人撤回（PRD新增：待审核状态下提交人可撤回，恢复代扣） ===== */
 function doWithdraw(id){
   const d=data.find(x=>x.id===id); if(!d||d.status!=="pending") return;
-  d.status="withdraw"; d.deduct="resumed"; d.withdrawBy="客服-李娜"; d.withdrawAt=now();
+  d.status="withdraw"; d.deduct="resumed"; d.withdrawBy="李娜"; d.withdrawAt=now();
   (d.periods&&d.periods.length?d.periods:[d.period]).forEach(p=>{
     const ob=findBill(d.order,p);
     if(ob) ob.deduct=ob.remain===0?"off":"on";
@@ -1143,7 +1026,6 @@ function doWithdraw(id){
   refreshOrderState(d.order);
   render(); refreshCounts();
   if(curPage==="detail") renderOrderDetail(curOrder);
-  notify("finance","withdraw",`入账审核已撤回：订单 ${d.order} · ${fmt(d.amount)}，${periodsOf(d).join("、")}代扣能力已恢复`,d.order);
   toast(`已撤回：记录状态变更为「已撤回」，${periodsOf(d).join("、")}代扣能力已恢复`);
 }
 
@@ -1153,22 +1035,11 @@ function doWithdraw(id){
 function hideModal(id){document.getElementById(id).classList.remove("show");}
 function refreshCounts(){
   const c={all:data.length,pending:0,pass:0,reject:0,withdraw:0};
-  let pendingAmt=0, passAmt=0;
-  data.forEach(d=>{
-    c[d.status]++;
-    if(d.status==="pending") pendingAmt+=d.amount;
-    if(d.status==="pass") passAmt+=d.amount;
-  });
+  data.forEach(d=>{c[d.status]++;});
   document.querySelectorAll(".tab").forEach(t=>{
     t.querySelector(".cnt").textContent=c[t.dataset.status];
   });
   document.getElementById("navBadge").textContent=c.pending;
-  document.getElementById("stPending").textContent=c.pending;
-  document.getElementById("stPass").textContent=c.pass;
-  document.getElementById("stPassAmt").textContent=fmt(passAmt);
-  document.getElementById("stReject").textContent=c.reject;
-  document.getElementById("stPendingAmt").textContent=fmt(pendingAmt);
-  document.getElementById("stPendingCnt").textContent=c.pending;
 }
 function toast(msg){
   const t=document.getElementById("toast");
@@ -1179,7 +1050,7 @@ function now(){
   const d=new Date(),p=n=>String(n).padStart(2,"0");
   return `2026-08-27 ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
-render(); refreshCounts(); renderNotices(); switchPage("audit");
+render(); refreshCounts(); switchPage("audit");
 </script>
 </body>
 </html>
