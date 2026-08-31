@@ -137,9 +137,6 @@
   .modal-body textarea:focus{border-color:var(--primary-light);}
   .req::after{content:" *";color:var(--danger);}
   .modal-foot{padding:14px 20px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--border);background:#FAFBFC;}
-  .confirm-list{background:#F8FAFC;border-radius:6px;padding:12px 14px;margin-top:10px;}
-  .confirm-list li{list-style:none;padding-left:16px;position:relative;color:var(--text-sub);}
-  .confirm-list li::before{content:"·";position:absolute;left:4px;font-weight:700;}
 
   /* toast */
   .toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-20px);background:#1E2A3A;color:#fff;padding:10px 24px;border-radius:8px;font-size:13px;opacity:0;transition:all .3s;z-index:300;pointer-events:none;box-shadow:0 8px 20px rgba(0,0,0,.2);}
@@ -348,14 +345,8 @@
   <div class="modal">
     <div class="modal-head" style="color:var(--success)">✔ 审核通过确认</div>
     <div class="modal-body">
-      确认通过后，系统将自动执行以下动作：
-      <ul class="confirm-list">
-        <li>入账至订单 <b id="passOrder"></b> 对应账期的账单下；</li>
-        <li>账单「已还金额」累加，剩余应还实时更新（仅关联账单状态，订单状态沿用现有处理逻辑）；</li>
-        <li>金额校验：交易金额超过所选账单剩余应还时<b>不允许通过</b>，提示「金额超出，请确认还款账期」；</li>
-        <li>按<b>账单维度</b>恢复对应账期代扣能力（已结清无需代扣，部分入账继续代扣剩余，不影响订单下其他账期）。</li>
-      </ul>
-      <div style="margin-top:10px;color:var(--text-light)">入账与状态更新保持事务一致，通过后不可撤销。</div>
+      已核实到账，确认无误，将按实际入账金额（收款 − 优惠）执行入账操作。
+      <div style="margin-top:10px;color:var(--text-light)">通过后不可撤销。</div>
     </div>
     <div class="modal-foot">
       <button class="btn" onclick="hideModal('passModal')">取消</button>
@@ -966,7 +957,6 @@ function closeDrawer(){
 /* ===== 通过 ===== */
 function openPass(id){
   curRow=data.find(x=>x.id===id);
-  document.getElementById("passOrder").textContent=curRow.order;
   document.getElementById("passModal").classList.add("show");
 }
 function doPass(){
