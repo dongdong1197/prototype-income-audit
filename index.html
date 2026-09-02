@@ -81,6 +81,7 @@
   .tag-pause{background:#EEF2FF;color:#4C51BF;}
   .tag-channel{background:#F3F4F6;color:var(--text-sub);}
   .tag-withdraw{background:#F3F4F6;color:var(--text-light);}
+  .tag-judicial{background:#FDF2F8;color:#BE185D;}
   /* 驳回原因列表展示：固定宽度截断，鼠标悬停展示全部 */
   .reject-reason{display:inline-block;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom;color:var(--danger);cursor:help;}
   /* 账期多选列表 */
@@ -265,7 +266,7 @@
             <label>订单号</label><input type="text" id="foOrder" placeholder="请输入订单号" style="width:160px">
             <label>客户</label><input type="text" id="foUser" placeholder="姓名/手机号" style="width:130px">
             <label>订单状态</label>
-            <select id="foStatus" style="width:100px"><option value="">全部</option><option value="fulfilling">履约中</option><option value="overdue">已逾期</option><option value="settled">已结清</option></select>
+            <select id="foStatus" style="width:100px"><option value="">全部</option><option value="fulfilling">履约中</option><option value="overdue">已逾期</option><option value="judicial">司法处置中</option><option value="settled">已结清</option></select>
             <button class="btn btn-primary" onclick="renderOrders()">查询</button>
             <button class="btn" onclick="resetOrderFilter()">重置</button>
           </div>
@@ -377,7 +378,10 @@
     <div class="modal-head" id="subModalTitle">💵 新建线下收款流水</div>
     <div class="modal-body">
       <div id="subRejectBanner"></div>
-      <div class="form-row"><label class="req">关联订单</label><div class="ctrl"><input type="text" id="subOrder" readonly style="background:#F3F4F6"><div class="form-tip">仅还款中/逾期订单可提交，已完结、司法处置中不可提交；本次仅支持租金账单入账审核</div></div></div>
+      <div class="form-row"><label class="req">关联订单</label><div class="ctrl"><input type="text" id="subOrder" readonly style="background:#F3F4F6"><div class="form-tip">还款中/逾期/司法处置中订单可提交，已完结不可提交</div></div></div>
+      <div class="form-row"><label class="req">账单类型</label><div class="ctrl"><select id="subBillType" style="width:200px">
+        <option value="租机账单">租机账单</option><option value="司法账单">司法账单</option>
+      </select><div class="form-tip" id="subBillTypeTip">按订单类型限制：租机订单仅可选租机账单，司法订单仅可选司法账单</div></div></div>
       <div class="form-row"><label class="req">关联账期</label><div class="ctrl"><div id="subPeriodList" class="period-list"></div><div class="form-tip" id="subRemainTip"></div></div></div>
       <div class="form-row"><label class="req">收款金额</label><div class="ctrl"><input type="text" id="subAmount" placeholder="请输入本次收款金额（元）"></div></div>
       <div class="form-row"><label>优惠金额</label><div class="ctrl"><input type="text" id="subDiscount" placeholder="选填，协商减免金额（元）"><div class="form-tip">如有协商减免填写，无减免留空；实际入账金额 = 收款金额 − 优惠金额，入账按优惠后金额计算</div></div></div>
@@ -455,6 +459,7 @@ const orderDefs=[
   {no:"BJZ20260610012", user:"刘先生 186****7742", goods:"iPhone 14 Plus 128G", monthly:2300, periods:12, cur:9, curDue:4600, curPaid:200, paused:true, overdue:true},
   {no:"BJZ20260715004", user:"赵女士 137****2216", goods:"iPad Pro 11寸 + Apple Pencil", monthly:2500, periods:6, cur:2, curDue:2500, curPaid:1250, paused:true},
   {no:"BJZ20260408010", user:"孙先生 150****9023", goods:"华为 Mate 60 Pro 512G", monthly:2100, periods:12, cur:8, curDue:2100, curPaid:600, paused:true},
+  {no:"BJZ20260412002", user:"郑先生 138****6677", goods:"iPhone 13 128G 星光色", monthly:1900, periods:12, cur:7, curDue:1900, curPaid:0, paused:false, judicial:true},
   {no:"BJZ20260102008", user:"周女士 135****6681", goods:"戴森 V12 吸尘器", monthly:3800, periods:10, cur:10, curDue:3800, curPaid:0, paused:false},
 ];
 
@@ -469,7 +474,7 @@ const orders=orderDefs.map(o=>{
     const paid=isCur?o.curPaid:(i<o.cur?o.monthly:0);
     bills.push({
       label:`${year}-${String(month).padStart(2,"0")}期(第${i}期)`,
-      type:"普通租金", due, paid, remain:due-paid,
+      type:o.judicial?"司法账单":"租机账单", due, paid, remain:due-paid,
       repayDay:`${year}-${String(month).padStart(2,"0")}-15`,
       deduct:paid>=due?"off":(isCur&&o.paused?"paused":"on"),
       isCur
@@ -478,10 +483,10 @@ const orders=orderDefs.map(o=>{
   const remainTotal=bills.reduce((s,b)=>s+b.remain,0);
   const paidPeriods=bills.filter(b=>b.remain===0).length;
   return {...o, bills, remainTotal, paidPeriods, total:o.monthly*o.periods,
-    status:remainTotal===0?"settled":(o.overdue?"overdue":"fulfilling")};
+    status:o.judicial?"judicial":(remainTotal===0?"settled":(o.overdue?"overdue":"fulfilling"))};
 });
 
-const orderStatusMap={fulfilling:["履约中","tag-info"],overdue:["已逾期","tag-overdue"],settled:["已结清","tag-pass"]};
+const orderStatusMap={fulfilling:["履约中","tag-info"],overdue:["已逾期","tag-overdue"],settled:["已结清","tag-pass"],judicial:["司法处置中","tag-judicial"]};
 /* 补全审核记录字段：用户姓名 / 审核单号 / 账期数组 / 账单类型（PRD对齐） */
 const userFallback={BJZ20260518006:"李女士",BJZ20260412002:"郑先生",BJZ20260330009:"吴女士",BJZ20260221005:"冯先生",BJZ20260115011:"许女士"};
 const userNameOf=o=>{const od=orders.find(x=>x.no===o);if(od)return od.user.split(" ")[0];return userFallback[o]||"—";};
@@ -489,7 +494,7 @@ data.forEach((d,i)=>{
   d.user=userNameOf(d.order);
   d.auditNo="SH"+d.time.slice(0,10).replace(/-/g,"")+String(i+1).padStart(3,"0");
   d.periods=d.periods||[d.period];
-  d.billType=d.billType||"普通租金";
+  d.billType=d.billType||(orders.find(x=>x.no===d.order)&&orders.find(x=>x.no===d.order).judicial?"司法账单":"租机账单");
 });
 let curPage="audit", curOrder=null;
 
@@ -621,17 +626,17 @@ function refreshOrderState(orderNo){
 
 /* ===== 线下收款流水录入弹窗（新建 / 重新提交共用同一表单，区别仅在于驳回提示与数据回显） ===== */
 let subShotArr=[], submitMode="new", resubmitRow=null;
-/* 本次仅支持租金账单入账审核，固定普通租金类型 */
-const RENT_TYPE="普通租金";
-function rentBills(o){return o.bills.filter(b=>b.remain>0&&(b.type||RENT_TYPE)===RENT_TYPE);}
+/* 账单类型：租机订单→租机账单，司法订单→司法账单（按订单限制） */
+function orderBillType(o){return o.judicial?"司法账单":"租机账单";}
+function orderBills(o){const t=orderBillType(o);return o.bills.filter(b=>b.remain>0&&(b.type||t)===t);}
 function selectedPeriods(){return [...document.querySelectorAll("#subPeriodList input[type=checkbox]:checked")].map(c=>c.value);}
 /* 账期是否被锁定不可选：存在待审核/已撤回记录，或代扣在途 */
 function billLocked(o,b){
   const hasPending=data.some(x=>x.order===o.no&&(x.periods||[x.period]).includes(b.label)&&(x.status==="pending"||x.status==="withdraw"));
   return hasPending||b.deduct==="charging";
 }
-/* 可选未结清租金账期（PRD：待审核账期不可再次选中） */
-function selectableBills(o){return rentBills(o).filter(b=>!billLocked(o,b));}
+/* 可选未结清账单（PRD：待审核账期不可再次选中） */
+function selectableBills(o){return orderBills(o).filter(b=>!billLocked(o,b));}
 function openSubmit(mode,id){
   let d=null;
   if(mode==="resubmit"){
@@ -648,11 +653,16 @@ function openSubmit(mode,id){
   }
   const o=orders.find(x=>x.no===curOrder);
   if(!o){toast("请先从订单列表进入订单详情");return;}
-  /* 订单状态限制：仅还款中/逾期可提交（PRD） */
-  if(o.status!=="fulfilling"&&o.status!=="overdue"){
-    toast(o.status==="settled"?"该订单已完结，不可提交线下收款":"该订单处于司法处置中，不可提交线下收款");return;
-  }
+  /* 订单状态限制：还款中/逾期/司法处置中可提交，已完结不可提交（司法订单对应司法账单） */
+  if(o.status==="settled"){toast("该订单已完结，不可提交线下收款");return;}
   document.getElementById("subOrder").value=`${o.no}（${o.user}）`;
+  /* 账单类型：按订单类型限制（租机订单→租机账单，司法订单→司法账单，非对应项置灰） */
+  const bt=orderBillType(o);
+  const btSel=document.getElementById("subBillType");
+  btSel.options[0].disabled=!!o.judicial;
+  btSel.options[1].disabled=!o.judicial;
+  btSel.value=d?(d.billType==="司法账单"||d.billType==="租机账单"?d.billType:bt):bt;
+  document.getElementById("subBillTypeTip").textContent=o.judicial?"司法订单仅可选「司法账单」":"租机订单仅可选「租机账单」";
   const allUnpaid=o.bills.filter(b=>b.remain>0);
   if(!allUnpaid.length&&!d){toast("该订单账单已全部结清，无需登记收款");return;}
   renderPeriodList(o);
@@ -699,7 +709,7 @@ function renderPeriodList(o){
       <span class="p-meta">剩余应还 ${fmt(b.remain)} · 应还日 ${b.repayDay}</span>
       ${hasPending?'<span class="tag tag-withdraw">待审核中不可选</span>':(b.deduct==="charging"?'<span class="tag tag-pause">代扣在途</span>':"")}
     </label>`;
-  }).join(""):'<div class="empty-row" style="padding:16px">暂无未结清的租金账单</div>';
+  }).join(""):'<div class="empty-row" style="padding:16px">该账单类型暂无未结清账单</div>';
   onPeriodToggle();
 }
 function onPeriodToggle(){
@@ -732,12 +742,16 @@ function doSubmit(){
   const isRe=submitMode==="resubmit";
   const orderNo=isRe?resubmitRow.order:curOrder;
   const o=orders.find(x=>x.no===orderNo); if(!o) return;
+  const type=document.getElementById("subBillType").value;
   const labels=selectedPeriods();
   const amount=parseFloat(document.getElementById("subAmount").value);
   const discount=parseFloat(document.getElementById("subDiscount").value);
   const discountVal=isNaN(discount)?0:discount;
   const channel=document.getElementById("subChannel").value;
   const bank=document.getElementById("subBank").value.trim();
+  /* 账单类型校验：须与订单类型匹配（租机订单→租机账单，司法订单→司法账单） */
+  const expectType=orderBillType(o);
+  if(type!==expectType){toast(`账单类型不匹配：该订单仅可选「${expectType}」`);return;}
   if(!labels.length){toast("请至少选择一个关联账期");return;}
   /* 账期连续性校验：须含最早可选的未结清租金账期且连续（PRD：待审核账期不可选） */
   const validLabels=selectableBills(o).map(b=>b.label);
@@ -768,14 +782,14 @@ function doSubmit(){
     if(!d.versions) d.versions=[];
     d.versions.push({t:d.time, periods:[...(d.periods||[])], billType:d.billType, amount:d.amount, discount:d.discount||0, flow:d.flow, channel:d.channel, bank:d.bank, date:d.date, note:d.note||"", rejectBy:d.rejectBy, rejectAt:d.rejectAt, rejectReason:d.rejectReason});
     delete d.rejectBy; delete d.rejectAt; delete d.rejectReason;
-    d.periods=labels; d.period=labels[0]; d.billType=RENT_TYPE; d.flow=flow; d.channel=channel; d.bank=channel==="对公转账"?bank:""; d.amount=amount; d.discount=discountVal;
+    d.periods=labels; d.period=labels[0]; d.billType=type; d.flow=flow; d.channel=channel; d.bank=channel==="对公转账"?bank:""; d.amount=amount; d.discount=discountVal;
     d.date=date; d.shots=[...subShotArr]; d.note=document.getElementById("subNote").value.trim();
     d.status="pending"; d.deduct="paused"; d.time=now(); d.sub="李娜";
     d.bill={periods:labels, due:totalRemain, paid:0, remain:totalRemain};
   }else{
     const nd={id:Math.max(...data.map(d=>d.id))+1, order:orderNo,
       auditNo:"SH"+now().replace(/[-: ]/g,"").slice(0,14)+String(Math.max(...data.map(d=>d.id))+1).padStart(3,"0"),
-      user:userNameOf(orderNo), periods:labels, period:labels[0], billType:RENT_TYPE,
+      user:userNameOf(orderNo), periods:labels, period:labels[0], billType:type,
       flow, channel, bank:channel==="对公转账"?bank:"", amount, discount:discountVal, date,
       sub:"李娜", time:now(), status:"pending", deduct:"paused",
       bill:{periods:labels, due:totalRemain, paid:0, remain:totalRemain},
@@ -788,7 +802,7 @@ function doSubmit(){
   hideModal("submitModal");
   render(); refreshCounts(); if(curPage==="detail") renderOrderDetail(curOrder);
   /* 飞书机器人同步财务群（新增待审核） */
-  const feishuMsg=`【入账审核-新增待审核】订单 ${orderNo}（${userNameOf(orderNo)}）· ${labels.join("、")} · ${fmt(amount)}（${channel}${channel==="对公转账"&&bank?"/"+bank:""}）· 提交人 李娜 · 提交时间 ${now()}`;
+  const feishuMsg=`【入账审核-新增待审核】订单 ${orderNo}（${userNameOf(orderNo)}）· ${type} · ${labels.join("、")} · ${fmt(amount)}（${channel}${channel==="对公转账"&&bank?"/"+bank:""}）· 提交人 李娜 · 提交时间 ${now()}`;
   toast((isRe?"重新提交成功：状态恢复「待审核」":"提交成功：已进入「入账审核」待审核队列")+`，${labels.join("、")}代扣已暂停；已通过飞书机器人同步至财务群`);
   console.log("[飞书机器人→财务群]", feishuMsg);
 }
@@ -908,6 +922,7 @@ function openDrawer(id, view){
     </div>
     <div class="sec-title">交易信息（提交内容）</div>
     <div class="info-grid">
+      <div class="info-item"><span class="k">账单类型</span><span class="v">${d.billType||"租机账单"}</span></div>
       <div class="info-item"><span class="k">交易流水号</span><span class="v">${d.flow}</span></div>
       <div class="info-item"><span class="k">付款方式</span><span class="v">${d.channel}</span></div>
       ${d.bank?`<div class="info-item"><span class="k">付款银行</span><span class="v">${d.bank}</span></div>`:""}
@@ -961,7 +976,7 @@ function openPass(id){
 }
 function doPass(){
   const d=curRow;
-  /* 审核通过金额校验（普通租金账单）：交易金额超过所选账单剩余应还时不允许通过 */
+  /* 审核通过金额校验：入账金额（收款−优惠）超过所选账单剩余应还时不允许通过 */
   const pl=periodsOf(d);
   const remTotal=pl.reduce((t,p)=>{const b=findBill(d.order,p);return t+(b?b.remain:0);},0);
   /* 实际入账金额 = 收款金额 − 优惠金额 */
